@@ -4,6 +4,7 @@ from dotenv import load_dotenv
 import jwt
 from fastapi import Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer
+from src.exceptions.excepciones import ErrorNoAutorizadoJWT
 
 load_dotenv()
 
@@ -18,30 +19,22 @@ def verificar_token(token: str = Depends(oauth2_scheme)) -> Dict[str, Any]:
         payload: Dict[str, Any] = jwt.decode(token, KEY, algorithms=[ALGORITHM])
         return payload
     except jwt.ExpiredSignatureError:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="El token de acceso expiró. Vuelve a iniciar sesión.",
+        raise ErrorNoAutorizadoJWT(
+            mensaje="El token de acceso expiró. Vuelve a iniciar sesión.",
             headers={"WWW-Authenticate": "Bearer"},
         )
     except jwt.InvalidTokenError:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Credenciales inválidas o token modificado externamente.",
+        raise ErrorNoAutorizadoJWT(
+            mensaje="Credenciales inválidas o token modificado externamente.",
             headers={"WWW-Authenticate": "Bearer"},
         )
 
 
 def verificar_admin(payload: dict = Depends(verificar_token)):
     if not isinstance(payload, dict):
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Error interno con el payload.",
-        )
+        raise ErrorNoAutorizadoJWT(mensaje="Error interno con el payload.")
     es_admin = payload.get("es_admin")
 
     if not es_admin:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Acceso restringido.",
-        )
+        raise ErrorNoAutorizadoJWT()
     return payload
