@@ -1,11 +1,17 @@
+from __future__ import annotations
 import uuid
 from datetime import datetime
+from typing import TYPE_CHECKING
 
 from src.database.base import Base
 from sqlalchemy import DateTime, String, Text, ForeignKey, UniqueConstraint
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import relationship, Mapped, mapped_column
 from sqlalchemy.sql import func
+
+if TYPE_CHECKING:
+    from src.entities.usuario import Usuario
+    from src.entities.ficha_personaje import FichaPersonaje
 
 
 class Au(Base):
@@ -21,7 +27,7 @@ class Au(Base):
         UUID(as_uuid=True), ForeignKey("usuarios.id_usuario"), nullable=False
     )
     nombre_au: Mapped[str] = mapped_column(String(50), nullable=False)
-    descripcion_au: Mapped[str | None] = mapped_column(Text)
+    descripcion_au: Mapped[str | None] = mapped_column(Text, nullable=True)
 
     fecha_creacion: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now()
@@ -30,9 +36,9 @@ class Au(Base):
         DateTime(timezone=True), onupdate=func.now()
     )
 
-    usuario: Mapped[Usuario] = relationship(  # type: ignore
-        "Usuario", back_populates="aus", foreign_keys=[id_usuario]
+    usuario: Mapped[Usuario] = relationship(
+        "Usuario", back_populates="au", foreign_keys=[id_usuario]
     )
-    fichas: Mapped[list[FichaPersonaje]] = relationship(  # type: ignore
+    fichas: Mapped[list[FichaPersonaje]] = relationship(
         "FichaPersonaje", back_populates="au", foreign_keys="FichaPersonaje.id_au"
     )

@@ -1,11 +1,17 @@
+from __future__ import annotations
 import uuid
 from datetime import datetime
+from typing import TYPE_CHECKING
 
 from src.database.base import Base
 from sqlalchemy import Boolean, DateTime, String, Text
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import relationship, Mapped, mapped_column
 from sqlalchemy.sql import func
+
+if TYPE_CHECKING:
+    from src.entities.au import Au
+    from src.entities.ficha_personaje import FichaPersonaje
 
 
 class Usuario(Base):
@@ -25,10 +31,10 @@ class Usuario(Base):
         DateTime(timezone=True), onupdate=func.now()
     )
 
-    au: Mapped[list["Au"]] = relationship(  # type: ignore
+    au: Mapped[list[Au]] = relationship(
         "Au", back_populates="usuario", foreign_keys="Au.id_usuario"
     )
-    ficha_personaje: Mapped[list["FichaPersonaje"]] = relationship(  # type: ignore
+    ficha_personaje: Mapped[list[FichaPersonaje]] = relationship(
         "FichaPersonaje",
         back_populates="usuario",
         foreign_keys="FichaPersonaje.id_usuario",
