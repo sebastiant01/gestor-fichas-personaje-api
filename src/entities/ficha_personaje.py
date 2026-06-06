@@ -38,7 +38,7 @@ class FichaPersonaje(Base):
     nombre_personaje: Mapped[str] = mapped_column(String(100))
     sexo: Mapped[str] = mapped_column(String(30))
     edad: Mapped[int | None] = mapped_column(SmallInteger)
-    fecha_cumpleaños: Mapped[date] = mapped_column(Date)
+    fecha_cumpleanos: Mapped[date] = mapped_column(Date)
     signo_zodiacal: Mapped[str | None] = mapped_column(String(20))
     descripcion_personaje: Mapped[str | None] = mapped_column(Text)
     url_imagen: Mapped[str | None] = mapped_column(Text)
