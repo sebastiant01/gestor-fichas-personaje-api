@@ -13,7 +13,7 @@ KEY: str = os.getenv("JWT_KEY") or "secret_key"
 ALGORITHM: str = os.getenv("ALGORITHM") or "HS256"
 
 
-def verify_token(token: str = Depends(oauth2_scheme)) -> Dict[str, Any]:
+def verificar_token(token: str = Depends(oauth2_scheme)) -> Dict[str, Any]:
     try:
         payload: Dict[str, Any] = jwt.decode(token, KEY, algorithms=[ALGORITHM])
         return payload
@@ -31,15 +31,15 @@ def verify_token(token: str = Depends(oauth2_scheme)) -> Dict[str, Any]:
         )
 
 
-def verify_admin(payload: dict = Depends(verify_token)):
+def verificar_admin(payload: dict = Depends(verificar_token)):
     if not isinstance(payload, dict):
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Error interno con el payload.",
         )
-    is_admin = payload.get("role")
+    es_admin = payload.get("es_admin")
 
-    if not is_admin:
+    if not es_admin:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Acceso restringido.",
