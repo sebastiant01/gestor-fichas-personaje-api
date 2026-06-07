@@ -1,13 +1,22 @@
 from typing import Optional
+import uuid
 from src.entities.usuario import Usuario
 from sqlalchemy.orm import Session
-from src.exceptions.excepciones import ErrorDatosInvalidos, AppException
+from src.exceptions.excepciones import (
+    ErrorDatosInvalidos,
+    AppException,
+    ErrorNoEncontrado,
+)
 from src.repositories import usuario_repository
 from src.utils.hash_password import hash_password
 from fastapi import status
 
 
-def crear_usuario(db: Session, nombre_usuario: str, contrasena: str) -> None:
+def crear_usuario(db: Session, nombre_usuario: str, contrasena: str) -> Usuario:
+    if not nombre_usuario:
+        raise ErrorDatosInvalidos(mensaje="Error: Debe ingresar un nombre.")
+    if not contrasena:
+        raise ErrorDatosInvalidos(mensaje="Error: Debe ingresar una contraseña.")
     if len(nombre_usuario) == 0:
         raise ErrorDatosInvalidos(mensaje="Error: Debe haber nombre de usuario válido.")
     if len(contrasena) <= 5:
@@ -35,4 +44,73 @@ def crear_usuario(db: Session, nombre_usuario: str, contrasena: str) -> None:
         nombre_usuario=nombre_usuario, contrasena_hash=contrasena_hash
     )
 
-    usuario_repository.crear_usuario(db=db, usuario=nuevo_usuario)
+    return usuario_repository.crear_usuario(db=db, usuario=nuevo_usuario)
+
+
+def obtener_usuarios(
+    db: Session, skip: int = 0, limit: int = 100
+) -> Optional[list[Usuario]]:
+    return usuario_repository.obtener_usuarios(db=db, skip=skip, limit=limit)
+
+
+def obtener_usuario_por_id(db: Session, id_usuario: uuid.UUID) -> Optional[Usuario]:
+    if not isinstance(id_usuario, uuid.UUID):
+        raise ErrorDatosInvalidos(mensaje="Error: El id es inválido.")
+    if not id_usuario:
+        raise ErrorDatosInvalidos(mensaje="Error: Debe ingresar un id de usuario.")
+
+    usuario: Usuario | None = usuario_repository.obtener_usuario_por_id(
+        db=db, id_usuario=id_usuario
+    )
+    if not usuario:
+        raise ErrorNoEncontrado("Usuario")
+    return usuario
+
+
+def obtener_usuario_por_nombre_usuario(db: Session, nombre_usuario: str) -> Usuario:
+    if len(nombre_usuario) == 0:
+        raise ErrorDatosInvalidos(mensaje="Error: Debe ingresar un nombre de usuario.")
+    usuario: Usuario | None = usuario_repository.obtener_usuario_por_nombre_usuario(
+        db=db, nombre_usuario=nombre_usuario
+    )
+    if not usuario:
+        raise ErrorNoEncontrado("Usuario")
+    return usuario
+
+
+def actualizar_usuario(db: Session, id_usuario: uuid.UUID, **kwargs) -> Usuario:
+    usuario: Optional[Usuario] = usuario_repository.obtener_usuario_por_id(
+        db, id_usuario
+    )
+    if not usuario:
+        raise ErrorNoEncontrado("Usuario")
+
+    CAMPOS_NO_EDITABLES: list[str] = [
+        "id_usuario",
+        "es_admin",
+        "fecha_creacion",
+        "fecha_edicion",
+    ]
+
+    if "contrasena" in kwargs and kwargs["contrasena"] is not None:
+        kwargs["contrasena_hash"] = hash_password(kwargs.pop("contrasena"))
+
+    datos = {
+        key: value
+        for key, value in kwargs
+        if value is not None and key not in CAMPOS_NO_EDITABLES
+    }
+    if not datos:
+        raise ErrorDatosInvalidos(
+            mensaje="Error: No se enviaron datos para actualizar."
+        )
+    return usuario_repository.actualizar_usuario(db, usuario, datos)
+
+
+def eliminar_usuario(db: Session, id_usuario: uuid.UUID) -> None:
+    usuario: Optional[Usuario] = usuario_repository.obtener_usuario_por_id(
+        db, id_usuario
+    )
+    if not usuario:
+        raise ErrorNoEncontrado("Usuario")
+    return usuario_repository.eliminar_usuario(db, usuario)

@@ -1,3 +1,4 @@
+from typing import Optional
 import uuid
 
 from sqlalchemy.orm import Session
@@ -10,6 +11,10 @@ def crear_au(db: Session, au: Au) -> Au:
     db.commit()
     db.refresh(au)
     return au
+
+
+def obtener_aus(db: Session, skip: int, limit: int) -> Optional[list[Au]]:
+    return db.query(Au).offset(skip).limit(limit).all()
 
 
 def obtener_au_por_id(db: Session, id_au: uuid.UUID) -> Au | None:

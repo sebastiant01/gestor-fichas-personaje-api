@@ -1,7 +1,9 @@
+from typing import Optional
 import uuid
 from datetime import date
 
 from sqlalchemy.orm import Session
+from sqlalchemy import select, extract
 
 from src.entities.ficha_personaje import FichaPersonaje
 
@@ -11,6 +13,12 @@ def crear_ficha_personaje(db: Session, ficha: FichaPersonaje) -> FichaPersonaje:
     db.commit()
     db.refresh(ficha)
     return ficha
+
+
+def obtener_fichas(
+    db: Session, skip: int, limit: int
+) -> Optional[list[FichaPersonaje]]:
+    return db.query(FichaPersonaje).offset(skip).limit(limit).all()
 
 
 def obtener_fichas_por_id_usuario(
@@ -79,6 +87,20 @@ def obtener_fichas_por_cumpleanos(
         )
         .all()
     )
+
+
+def obtener_fichas_por_dia_cumpleanos(db: Session, dia: int) -> list[FichaPersonaje]:
+    statement = select(FichaPersonaje).where(
+        extract("day", FichaPersonaje.fecha_cumpleanos) == dia
+    )
+    return list(db.scalars(statement=statement).all())
+
+
+def obtener_fichas_por_mes_cumpleanos(db: Session, mes: int) -> list[FichaPersonaje]:
+    statement = select(FichaPersonaje).where(
+        extract("month", FichaPersonaje.fecha_cumpleanos) == mes
+    )
+    return list(db.scalars(statement=statement).all())
 
 
 def actualizar_ficha(db: Session, ficha: FichaPersonaje, datos: dict) -> FichaPersonaje:
