@@ -42,3 +42,10 @@ class Au(Base):
     fichas: Mapped[list[FichaPersonaje]] = relationship(
         "FichaPersonaje", back_populates="au", foreign_keys="FichaPersonaje.id_au"
     )
+
+    def __init__(
+        self, id_usuario: uuid.UUID, nombre_au: str, descripcion_au: str | None = None
+    ):
+        self.id_usuario = id_usuario
+        self.nombre_au = nombre_au
+        self.descripcion_au = descripcion_au

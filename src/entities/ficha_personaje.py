@@ -55,3 +55,27 @@ class FichaPersonaje(Base):
         "Usuario", back_populates="ficha_personaje", foreign_keys=[id_usuario]
     )
     au: Mapped[Au] = relationship("Au", back_populates="fichas", foreign_keys=[id_au])
+
+    def __init__(
+        self,
+        id_usuario: uuid.UUID,
+        id_au: uuid.UUID,
+        nombre_personaje: str,
+        sexo: str,
+        fecha_cumpleanos: date,
+        descripcion_personaje: str | None = None,
+        edad: int | None = None,
+        signo_zodiacal: str | None = None,
+        url_imagen: str | None = None,
+        url_musica: str | None = None,
+    ):
+        self.id_usuario = id_usuario
+        self.id_au = id_au
+        self.nombre_personaje = nombre_personaje
+        self.sexo = sexo
+        self.fecha_cumpleanos = fecha_cumpleanos
+        self.descripcion_personaje = descripcion_personaje
+        self.edad = edad
+        self.signo_zodiacal = signo_zodiacal
+        self.url_imagen = url_imagen
+        self.url_musica = url_musica

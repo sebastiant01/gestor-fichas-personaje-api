@@ -1,8 +1,9 @@
+from datetime import datetime, timezone, timedelta
 import os
 from typing import Any, Dict
 from dotenv import load_dotenv
 import jwt
-from fastapi import Depends, HTTPException, status
+from fastapi import Depends
 from fastapi.security import OAuth2PasswordBearer
 from src.exceptions.excepciones import ErrorNoAutorizadoJWT
 
@@ -10,8 +11,17 @@ load_dotenv()
 
 oauth2_scheme: OAuth2PasswordBearer = OAuth2PasswordBearer(tokenUrl="auth/login")
 
-KEY: str = os.getenv("JWT_KEY") or "secret_key"
-ALGORITHM: str = os.getenv("ALGORITHM") or "HS256"
+KEY: str = os.getenv("JWT_KEY", "")
+ALGORITHM: str = os.getenv("ALGORITHM", "")
+TOKEN_EXPIRE_MIN: int = int(os.getenv("ACCESS_TOKEN_EXPIRE_MINUTES", "30"))
+
+
+def crear_token(data: Dict[str, Any]):
+    payload = data.copy()
+    expira = datetime.now(timezone.utc) + timedelta(minutes=TOKEN_EXPIRE_MIN)
+    payload.update({"exp": expira})
+
+    return jwt.encode(payload=payload, key=KEY, algorithm=ALGORITHM)
 
 
 def verificar_token(token: str = Depends(oauth2_scheme)) -> Dict[str, Any]:

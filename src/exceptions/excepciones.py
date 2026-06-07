@@ -21,9 +21,9 @@ class ErrorNoEncontrado(AppException):
 
 
 class ErrorDatosInvalidos(AppException):
-    def __init__(self):
+    def __init__(self, mensaje="Error: Los datos ingresados no son válidos."):
         super().__init__(
-            mensaje="Error: Los datos ingresados no son válidos.",
+            mensaje=mensaje,
         )
 
 

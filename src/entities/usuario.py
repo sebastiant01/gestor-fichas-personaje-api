@@ -39,3 +39,10 @@ class Usuario(Base):
         back_populates="usuario",
         foreign_keys="FichaPersonaje.id_usuario",
     )
+
+    def __init__(
+        self, nombre_usuario: str, contrasena_hash: str, es_admin: bool = False
+    ):
+        self.nombre_usuario = nombre_usuario
+        self.contrasena_hash = contrasena_hash
+        self.es_admin = es_admin
