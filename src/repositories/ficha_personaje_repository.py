@@ -83,16 +83,22 @@ def obtener_fichas_por_cumpleanos(
     )
 
 
-def obtener_fichas_por_dia_cumpleanos(db: Session, dia: int) -> list[FichaPersonaje]:
+def obtener_fichas_por_dia_cumpleanos(
+    db: Session, id_usuario: uuid.UUID, dia: int
+) -> list[FichaPersonaje]:
     statement = select(FichaPersonaje).where(
-        extract("day", FichaPersonaje.fecha_cumpleanos) == dia
+        extract("day", FichaPersonaje.fecha_cumpleanos) == dia,
+        FichaPersonaje.id_usuario == id_usuario,
     )
     return list(db.scalars(statement=statement).all())
 
 
-def obtener_fichas_por_mes_cumpleanos(db: Session, mes: int) -> list[FichaPersonaje]:
+def obtener_fichas_por_mes_cumpleanos(
+    db: Session, id_usuario: uuid.UUID, mes: int
+) -> list[FichaPersonaje]:
     statement = select(FichaPersonaje).where(
-        extract("month", FichaPersonaje.fecha_cumpleanos) == mes
+        extract("month", FichaPersonaje.fecha_cumpleanos) == mes,
+        FichaPersonaje.id_usuario == id_usuario,
     )
     return list(db.scalars(statement=statement).all())
 

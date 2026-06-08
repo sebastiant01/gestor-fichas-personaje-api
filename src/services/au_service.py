@@ -40,6 +40,14 @@ def obtener_aus_por_usuario(db: Session, id_usuario: uuid.UUID) -> list[Au]:
     return au_repository.obtener_aus_por_id_usuario(db=db, id_usuario=id_usuario)
 
 
+def obtener_au_por_nombre(
+    db: Session, id_usuario: uuid.UUID, nombre_au: str
+) -> Au | None:
+    return au_repository.obtener_au_por_nombre(
+        db=db, id_usuario=id_usuario, nombre_au=nombre_au
+    )
+
+
 def obtener_au_por_id(db: Session, id_au: uuid.UUID, id_usuario: uuid.UUID) -> Au:
     au: Au | None = au_repository.obtener_au_por_id(db=db, id_au=id_au)
     if not au:
