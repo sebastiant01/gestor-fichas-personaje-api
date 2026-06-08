@@ -17,8 +17,6 @@ def crear_usuario(db: Session, nombre_usuario: str, contrasena: str) -> Usuario:
         raise ErrorDatosInvalidos(mensaje="Error: Debe ingresar un nombre.")
     if not contrasena:
         raise ErrorDatosInvalidos(mensaje="Error: Debe ingresar una contraseña.")
-    if len(nombre_usuario) == 0:
-        raise ErrorDatosInvalidos(mensaje="Error: Debe haber nombre de usuario válido.")
     if len(contrasena) <= 5:
         raise ErrorDatosInvalidos(
             mensaje="Error: Debe haber una contraseña mayor a 5 caracteres."
@@ -36,7 +34,7 @@ def crear_usuario(db: Session, nombre_usuario: str, contrasena: str) -> Usuario:
     if usuario_existente:
         raise AppException(
             mensaje="Error: Este usuario ya existe.",
-            codigo_http=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            codigo_http=status.HTTP_409_CONFLICT,
         )
     contrasena_hash: str = hash_password(contrasena)
 
@@ -47,9 +45,7 @@ def crear_usuario(db: Session, nombre_usuario: str, contrasena: str) -> Usuario:
     return usuario_repository.crear_usuario(db=db, usuario=nuevo_usuario)
 
 
-def obtener_usuarios(
-    db: Session, skip: int = 0, limit: int = 100
-) -> Optional[list[Usuario]]:
+def obtener_usuarios(db: Session, skip: int = 0, limit: int = 100) -> list[Usuario]:
     return usuario_repository.obtener_usuarios(db=db, skip=skip, limit=limit)
 
 
@@ -85,21 +81,10 @@ def actualizar_usuario(db: Session, id_usuario: uuid.UUID, **kwargs) -> Usuario:
     if not usuario:
         raise ErrorNoEncontrado("Usuario")
 
-    CAMPOS_NO_EDITABLES: list[str] = [
-        "id_usuario",
-        "es_admin",
-        "fecha_creacion",
-        "fecha_edicion",
-    ]
-
     if "contrasena" in kwargs and kwargs["contrasena"] is not None:
         kwargs["contrasena_hash"] = hash_password(kwargs.pop("contrasena"))
 
-    datos = {
-        key: value
-        for key, value in kwargs
-        if value is not None and key not in CAMPOS_NO_EDITABLES
-    }
+    datos = {key: value for key, value in kwargs.items() if value is not None}
     if not datos:
         raise ErrorDatosInvalidos(
             mensaje="Error: No se enviaron datos para actualizar."
@@ -113,4 +98,4 @@ def eliminar_usuario(db: Session, id_usuario: uuid.UUID) -> None:
     )
     if not usuario:
         raise ErrorNoEncontrado("Usuario")
-    return usuario_repository.eliminar_usuario(db, usuario)
+    usuario_repository.eliminar_usuario(db, usuario)

@@ -15,12 +15,6 @@ def crear_ficha_personaje(db: Session, ficha: FichaPersonaje) -> FichaPersonaje:
     return ficha
 
 
-def obtener_fichas(
-    db: Session, skip: int, limit: int
-) -> Optional[list[FichaPersonaje]]:
-    return db.query(FichaPersonaje).offset(skip).limit(limit).all()
-
-
 def obtener_fichas_por_id_usuario(
     db: Session, id_usuario: uuid.UUID
 ) -> list[FichaPersonaje]:
