@@ -1,6 +1,6 @@
 from datetime import datetime, timezone, timedelta
 import os
-from typing import Any, Dict
+from typing import Any
 from dotenv import load_dotenv
 import jwt
 from fastapi import Depends
@@ -16,7 +16,7 @@ ALGORITHM: str = os.getenv("ALGORITHM", "")
 TOKEN_EXPIRE_MIN: int = int(os.getenv("ACCESS_TOKEN_EXPIRE_MINUTES", "30"))
 
 
-def crear_token(data: Dict[str, Any]):
+def crear_token(data: dict[str, Any]):
     payload = data.copy()
     expira = datetime.now(timezone.utc) + timedelta(minutes=TOKEN_EXPIRE_MIN)
     payload.update({"exp": expira})
@@ -24,9 +24,9 @@ def crear_token(data: Dict[str, Any]):
     return jwt.encode(payload=payload, key=KEY, algorithm=ALGORITHM)
 
 
-def verificar_token(token: str = Depends(oauth2_scheme)) -> Dict[str, Any]:
+def verificar_token(token: str = Depends(oauth2_scheme)) -> dict[str, Any]:
     try:
-        payload: Dict[str, Any] = jwt.decode(token, KEY, algorithms=[ALGORITHM])
+        payload: dict[str, Any] = jwt.decode(token, KEY, algorithms=[ALGORITHM])
         return payload
     except jwt.ExpiredSignatureError:
         raise ErrorNoAutorizadoJWT(
@@ -40,7 +40,7 @@ def verificar_token(token: str = Depends(oauth2_scheme)) -> Dict[str, Any]:
         )
 
 
-def verificar_admin(payload: dict = Depends(verificar_token)):
+def verificar_admin(payload: dict[str, Any] = Depends(verificar_token)):
     if not isinstance(payload, dict):
         raise ErrorNoAutorizadoJWT(mensaje="Error interno con el payload.")
     es_admin = payload.get("es_admin")
