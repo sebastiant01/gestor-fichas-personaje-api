@@ -43,9 +43,14 @@ def obtener_aus_por_usuario(db: Session, id_usuario: uuid.UUID) -> list[Au]:
 def obtener_au_por_nombre(
     db: Session, id_usuario: uuid.UUID, nombre_au: str
 ) -> Au | None:
-    return au_repository.obtener_au_por_nombre(
+    if not nombre_au:
+        raise ErrorDatosInvalidos(mensaje="Error: Debe ingresar el nombre del AU.")
+    au: Au | None = au_repository.obtener_au_por_nombre(
         db=db, id_usuario=id_usuario, nombre_au=nombre_au
     )
+    if not au:
+        raise ErrorNoEncontrado("AU")
+    return au
 
 
 def obtener_au_por_id(db: Session, id_au: uuid.UUID, id_usuario: uuid.UUID) -> Au:

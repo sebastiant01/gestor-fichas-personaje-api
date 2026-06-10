@@ -1,6 +1,7 @@
 from datetime import datetime, timezone, timedelta
 import os
 from typing import Any
+from uuid import UUID
 from dotenv import load_dotenv
 import jwt
 from fastapi import Depends
@@ -30,12 +31,12 @@ def verificar_token(token: str = Depends(oauth2_scheme)) -> dict[str, Any]:
         return payload
     except jwt.ExpiredSignatureError:
         raise ErrorNoAutorizadoJWT(
-            mensaje="El token de acceso expiró. Vuelve a iniciar sesión.",
+            mensaje="Error: El token de acceso expiró. Vuelve a iniciar sesión.",
             headers={"WWW-Authenticate": "Bearer"},
         )
     except jwt.InvalidTokenError:
         raise ErrorNoAutorizadoJWT(
-            mensaje="Credenciales inválidas o token modificado externamente.",
+            mensaje="Error: Credenciales inválidas o token modificado externamente.",
             headers={"WWW-Authenticate": "Bearer"},
         )
 
@@ -48,3 +49,12 @@ def verificar_admin(payload: dict[str, Any] = Depends(verificar_token)):
     if not es_admin:
         raise ErrorNoAutorizadoJWT()
     return payload
+
+
+def get_id_usuario(payload: dict[str, Any]) -> UUID:
+    id_payload: str | None = payload.get("sub")
+    if not id_payload:
+        raise ErrorNoAutorizadoJWT()
+    id_usuario: UUID = UUID(id_payload)
+
+    return id_usuario
