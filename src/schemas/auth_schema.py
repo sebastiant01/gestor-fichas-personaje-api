@@ -1,9 +1,4 @@
-from pydantic import BaseModel, Field
-
-
-class UsuarioLogin(BaseModel):
-    nombre_usuario: str = Field(..., min_length=1, max_length=40)
-    contrasena: str = Field(..., min_length=6)
+from pydantic import BaseModel
 
 
 class TokenResponse(BaseModel):

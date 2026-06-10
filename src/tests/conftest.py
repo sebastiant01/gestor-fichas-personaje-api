@@ -6,7 +6,7 @@ from fastapi.testclient import TestClient
 from sqlalchemy.orm import Session
 from sqlalchemy import create_engine
 
-from src.app.api_config import app
+from api_config import app
 from src.database.base import Base
 from src.entities.usuario import Usuario
 from src.entities.au import Au
