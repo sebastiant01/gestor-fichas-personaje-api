@@ -30,7 +30,7 @@ def login_usuario(
     if not verify_password(
         hashed_password=usuario.contrasena_hash, password=credenciales.password
     ):
-        raise ErrorDatosInvalidos(
+        raise ErrorNoAutorizadoJWT(
             mensaje="Error: El usuario o contraseña son incorrectos."
         )
     if not usuario.es_admin:

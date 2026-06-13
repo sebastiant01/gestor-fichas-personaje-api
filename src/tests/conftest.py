@@ -4,6 +4,7 @@ import pytest
 from fastapi.testclient import TestClient
 
 from sqlalchemy.orm import Session
+from sqlalchemy.pool import StaticPool
 from sqlalchemy import create_engine
 
 from api_config import app
@@ -12,11 +13,19 @@ from src.entities.usuario import Usuario
 from src.entities.au import Au
 from src.entities.ficha_personaje import FichaPersonaje
 
+from src.utils.hash_password import hash_password
+from src.utils.jwt_auth import crear_token
+from src.repositories import usuario_repository
+
+from src.database.session import get_db
+
 
 @pytest.fixture(scope="function")
 def engine():
     engine = create_engine(
-        "sqlite:///:memory:", connect_args={"check_same_thread": False}
+        "sqlite:///:memory:",
+        connect_args={"check_same_thread": False},
+        poolclass=StaticPool,
     )
 
     from sqlalchemy.dialects import sqlite
@@ -35,6 +44,28 @@ def db(engine):
 
 
 @pytest.fixture
-def client() -> Iterator[TestClient]:
+def token_admin(usuario_admin: Usuario) -> str:
+    return crear_token(
+        data={
+            "sub": str(usuario_admin.id_usuario),
+            "nombre_usuario": usuario_admin.nombre_usuario,
+            "es_admin": usuario_admin.es_admin,
+        },
+        tipo_token="access",
+    )
+
+
+@pytest.fixture
+def headers_admin(token_admin: str) -> dict:
+    return {"Authorization": f"Bearer {token_admin}"}
+
+
+@pytest.fixture
+def client(db: Session) -> Iterator[TestClient]:
+    def override_get_db():
+        yield db
+
+    app.dependency_overrides[get_db] = override_get_db
     with TestClient(app) as c:
         yield c
+    app.dependency_overrides.clear()
