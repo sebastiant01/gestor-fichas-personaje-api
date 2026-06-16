@@ -31,6 +31,21 @@ def obtener_fichas_por_usuario(
 
 
 @ficha_router.get(
+    path="/aus",
+    status_code=status.HTTP_200_OK,
+    response_model=List[FichaPersonajeResponse],
+)
+def obtener_fichas_por_au(
+    id_au: UUID,
+    db: Session = Depends(get_db),
+    payload: dict[str, Any] = Depends(verificar_admin),
+):
+    return ficha_personaje_service.obtener_fichas_por_au(
+        db=db, id_usuario=get_id_usuario(payload=payload), id_au=id_au
+    )
+
+
+@ficha_router.get(
     path="/buscar/nombre",
     status_code=status.HTTP_200_OK,
     response_model=List[FichaPersonajeResponse],

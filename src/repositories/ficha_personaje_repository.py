@@ -31,6 +31,16 @@ def obtener_ficha_por_id(db: Session, id_ficha: uuid.UUID) -> FichaPersonaje | N
     )
 
 
+def obtener_fichas_por_au(
+    db: Session, id_usuario: uuid.UUID, id_au: uuid.UUID
+) -> list[FichaPersonaje]:
+    return (
+        db.query(FichaPersonaje)
+        .filter(FichaPersonaje.id_usuario == id_usuario, FichaPersonaje.id_au == id_au)
+        .all()
+    )
+
+
 def obtener_fichas_por_nombre_personaje(
     db: Session, id_usuario: uuid.UUID, nombre_personaje: str
 ) -> list[FichaPersonaje]:

@@ -93,6 +93,17 @@ def obtener_ficha_por_id(
     return ficha
 
 
+def obtener_fichas_por_au(
+    db: Session, id_usuario: uuid.UUID, id_au: uuid.UUID
+) -> list[FichaPersonaje]:
+    au: Au | None = au_repository.obtener_au_por_id(db=db, id_au=id_au)
+    if not au:
+        raise ErrorNoEncontrado("AU")
+    return ficha_personaje_repository.obtener_fichas_por_au(
+        db=db, id_usuario=id_usuario, id_au=id_au
+    )
+
+
 def obtener_fichas_por_nombre_personaje(
     db: Session, id_usuario: uuid.UUID, nombre_personaje: str
 ) -> list[FichaPersonaje]:
