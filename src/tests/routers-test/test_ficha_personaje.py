@@ -1,3 +1,5 @@
+import uuid
+
 import pytest
 from datetime import date
 from fastapi.testclient import TestClient
@@ -78,6 +80,20 @@ def test_obtener_ficha_por_id(
     )
     assert response.status_code == 200
     assert response.json()["nombre_personaje"] == "Sakura"
+
+
+def test_obtener_fichas_por_au(
+    client: TestClient, ficha_base: FichaPersonaje, au_base: Au, headers_admin: dict
+):
+    response = client.get(f"/fichas/aus?id_au={au_base.id_au}", headers=headers_admin)
+    assert response.status_code == 200
+    assert len(response.json()) == 1
+    assert response.json()[0]["id_au"] == str(au_base.id_au)
+
+
+def test_obtener_fichas_por_au_inexistente(client: TestClient, headers_admin: dict):
+    response = client.get(f"/fichas/aus?id_au={uuid.uuid4()}", headers=headers_admin)
+    assert response.status_code == 404
 
 
 def test_obtener_fichas_por_nombre(
