@@ -154,6 +154,36 @@ def test_obtener_fichas_por_usuario_sin_fichas_retorna_lista_vacia(
     assert resultado == []
 
 
+# ── obtener_fichas_por_au ─────────────────────────────────────────────────────
+
+
+def test_obtener_fichas_por_au_retorna_fichas(
+    db: Session, usuario_base: Usuario, au_base: Au, ficha_base: FichaPersonaje
+):
+    resultado = ficha_personaje_repository.obtener_fichas_por_au(
+        db=db, id_usuario=usuario_base.id_usuario, id_au=au_base.id_au
+    )
+
+    assert isinstance(resultado, list)
+    assert len(resultado) == 1
+    assert resultado[0].id_au == au_base.id_au
+
+
+def test_obtener_fichas_por_au_no_mezcla_aus(
+    db: Session,
+    usuario_base: Usuario,
+    au_base: Au,
+    au_idols: Au,
+    ficha_base: FichaPersonaje,
+):
+    # ficha_base pertenece a au_base; au_idols no tiene fichas
+    resultado = ficha_personaje_repository.obtener_fichas_por_au(
+        db=db, id_usuario=usuario_base.id_usuario, id_au=au_idols.id_au
+    )
+
+    assert resultado == []
+
+
 # ── obtener_fichas_por_nombre_personaje ───────────────────────────────────────
 
 

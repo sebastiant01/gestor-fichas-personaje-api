@@ -151,6 +151,23 @@ def test_obtener_ficha_usuario_incorrecto(db: Session, ficha_base):
         )
 
 
+def test_obtener_fichas_por_au_exitoso(db: Session, usuario_base, au_base, ficha_base):
+    resultado = ficha_personaje_service.obtener_fichas_por_au(
+        db=db, id_usuario=usuario_base.id_usuario, id_au=au_base.id_au
+    )
+
+    assert isinstance(resultado, list)
+    assert len(resultado) == 1
+    assert resultado[0].id_au == au_base.id_au
+
+
+def test_obtener_fichas_por_au_inexistente(db: Session, usuario_base):
+    with pytest.raises(ErrorNoEncontrado):
+        ficha_personaje_service.obtener_fichas_por_au(
+            db=db, id_usuario=usuario_base.id_usuario, id_au=uuid.uuid4()
+        )
+
+
 # ── actualizar_ficha ──────────────────────────────────────────────────────────
 
 
