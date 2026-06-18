@@ -4,8 +4,10 @@ from typing import Any, List
 from uuid import UUID
 
 from src.schemas.au_schema import AuCreate, AuUpdate, AuResponse
+from src.schemas.ficha_personaje_schema import FichaPersonajeResponse
 from src.database.session import get_db
 from src.services import au_service
+from src.services import ficha_personaje_service
 from src.utils.jwt_auth import verificar_admin, get_id_usuario
 
 au_router: APIRouter = APIRouter(prefix="/aus", tags=["AUs"])
@@ -49,6 +51,21 @@ def obtener_au_por_id(
     )
 
 
+@au_router.get(
+    path="/{id_au}/fichas",
+    status_code=status.HTTP_200_OK,
+    response_model=List[FichaPersonajeResponse],
+)
+def obtener_fichas_de_au(
+    id_au: UUID,
+    db: Session = Depends(get_db),
+    payload: dict[str, Any] = Depends(verificar_admin),
+):
+    return ficha_personaje_service.obtener_fichas_por_au(
+        db=db, id_usuario=get_id_usuario(payload=payload), id_au=id_au
+    )
+
+
 @au_router.post(
     path="/", status_code=status.HTTP_201_CREATED, response_model=AuResponse
 )
@@ -65,7 +82,7 @@ def crear_au(
     )
 
 
-@au_router.put(
+@au_router.patch(
     path="/{id_au}", status_code=status.HTTP_200_OK, response_model=AuResponse
 )
 def actualizar_au(

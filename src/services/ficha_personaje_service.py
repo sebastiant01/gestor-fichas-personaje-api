@@ -99,6 +99,11 @@ def obtener_fichas_por_au(
     au: Au | None = au_repository.obtener_au_por_id(db=db, id_au=id_au)
     if not au:
         raise ErrorNoEncontrado("AU")
+    if au.id_usuario != id_usuario:
+        raise AppException(
+            mensaje="Error: No tienes permiso para usar este AU.",
+            codigo_http=status.HTTP_403_FORBIDDEN,
+        )
     return ficha_personaje_repository.obtener_fichas_por_au(
         db=db, id_usuario=id_usuario, id_au=id_au
     )

@@ -82,20 +82,6 @@ def test_obtener_ficha_por_id(
     assert response.json()["nombre_personaje"] == "Sakura"
 
 
-def test_obtener_fichas_por_au(
-    client: TestClient, ficha_base: FichaPersonaje, au_base: Au, headers_admin: dict
-):
-    response = client.get(f"/fichas/aus?id_au={au_base.id_au}", headers=headers_admin)
-    assert response.status_code == 200
-    assert len(response.json()) == 1
-    assert response.json()[0]["id_au"] == str(au_base.id_au)
-
-
-def test_obtener_fichas_por_au_inexistente(client: TestClient, headers_admin: dict):
-    response = client.get(f"/fichas/aus?id_au={uuid.uuid4()}", headers=headers_admin)
-    assert response.status_code == 404
-
-
 def test_obtener_fichas_por_nombre(
     client: TestClient, ficha_base: FichaPersonaje, headers_admin: dict
 ):
@@ -192,7 +178,7 @@ def test_crear_ficha_edad_en_au_no_idols(
 def test_actualizar_ficha(
     client: TestClient, ficha_base: FichaPersonaje, headers_admin: dict
 ):
-    response = client.put(
+    response = client.patch(
         f"/fichas/{ficha_base.id_ficha_personaje}",
         json={"nombre_personaje": "Sakura 🌸"},
         headers=headers_admin,

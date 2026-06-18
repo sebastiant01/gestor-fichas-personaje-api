@@ -91,7 +91,7 @@ def test_crear_usuario_duplicado(
 def test_actualizar_usuario(
     client: TestClient, headers_admin: dict, usuario_admin: Usuario
 ):
-    response = client.put(
+    response = client.patch(
         "/usuarios/me",
         json={"nombre_usuario": "coche_v2"},
         headers=headers_admin,

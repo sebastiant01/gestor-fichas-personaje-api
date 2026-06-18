@@ -74,7 +74,7 @@ def crear_usuario(
     )
 
 
-@usuario_router.put(
+@usuario_router.patch(
     path="/me", status_code=status.HTTP_200_OK, response_model=UsuarioResponse
 )
 def actualizar_usuario(

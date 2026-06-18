@@ -5,7 +5,12 @@ from sqlalchemy.orm import Session
 from src.utils.hash_password import hash_password
 from src.entities.usuario import Usuario
 from src.entities.au import Au
-from src.repositories import usuario_repository, au_repository
+from src.entities.ficha_personaje import FichaPersonaje
+from src.repositories import (
+    usuario_repository,
+    au_repository,
+    ficha_personaje_repository,
+)
 from src.utils.jwt_auth import crear_token
 
 
@@ -38,6 +43,20 @@ def au_base(db: Session, usuario_admin: Usuario) -> Au:
     return au_repository.crear_au(db=db, au=au)
 
 
+@pytest.fixture
+def ficha_base(db: Session, usuario_admin: Usuario, au_base: Au) -> FichaPersonaje:
+    from datetime import date
+
+    ficha = FichaPersonaje(
+        id_usuario=usuario_admin.id_usuario,
+        id_au=au_base.id_au,
+        nombre_personaje="Test Personaje",
+        sexo="femenino",
+        fecha_cumpleanos=date(2000, 1, 1),
+    )
+    return ficha_personaje_repository.crear_ficha_personaje(db=db, ficha=ficha)
+
+
 def test_obtener_aus(client: TestClient, au_base: Au, headers_admin: dict):
     response = client.get("/aus/", headers=headers_admin)
     assert response.status_code == 200
@@ -48,6 +67,23 @@ def test_obtener_au_por_id(client: TestClient, au_base: Au, headers_admin: dict)
     response = client.get(f"/aus/{au_base.id_au}", headers=headers_admin)
     assert response.status_code == 200
     assert response.json()["nombre_au"] == "cat"
+
+
+def test_obtener_fichas_de_au(
+    client: TestClient, ficha_base: FichaPersonaje, headers_admin: dict
+):
+    response = client.get(f"/aus/{ficha_base.id_au}/fichas", headers=headers_admin)
+    assert response.status_code == 200
+    assert len(response.json()) == 1
+    assert response.json()[0]["nombre_personaje"] == "Test Personaje"
+
+
+def test_obtener_fichas_de_au_vacio(
+    client: TestClient, au_base: Au, headers_admin: dict
+):
+    response = client.get(f"/aus/{au_base.id_au}/fichas", headers=headers_admin)
+    assert response.status_code == 200
+    assert response.json() == []
 
 
 def test_obtener_au_por_nombre(client: TestClient, au_base: Au, headers_admin: dict):
@@ -83,7 +119,7 @@ def test_crear_au_duplicado(client: TestClient, au_base: Au, headers_admin: dict
 
 
 def test_actualizar_au(client: TestClient, au_base: Au, headers_admin: dict):
-    response = client.put(
+    response = client.patch(
         f"/aus/{au_base.id_au}",
         json={"nombre_au": "idols"},
         headers=headers_admin,
