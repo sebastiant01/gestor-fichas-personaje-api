@@ -23,7 +23,7 @@ def obtener_aus_por_id_usuario(
     payload: dict[str, Any] = Depends(verificar_admin),
 ):
     return au_service.obtener_aus_por_usuario(
-        db=db, id_usuario=get_id_usuario(payload=payload)
+        db=db, id_usuario=get_id_usuario(payload=payload), skip=skip, limit=limit
     )
 
 
