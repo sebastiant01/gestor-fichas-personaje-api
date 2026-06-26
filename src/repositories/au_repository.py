@@ -16,8 +16,12 @@ def obtener_au_por_id(db: Session, id_au: uuid.UUID) -> Au | None:
     return db.query(Au).filter(Au.id_au == id_au).first()
 
 
-def obtener_aus_por_id_usuario(db: Session, id_usuario: uuid.UUID) -> list[Au]:
-    return db.query(Au).filter(Au.id_usuario == id_usuario).all()
+def obtener_aus_por_id_usuario(
+    db: Session, id_usuario: uuid.UUID, skip: int, limit: int
+) -> list[Au]:
+    return (
+        db.query(Au).filter(Au.id_usuario == id_usuario).offset(skip).limit(limit).all()
+    )
 
 
 def obtener_au_por_nombre(

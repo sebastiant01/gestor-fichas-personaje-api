@@ -70,15 +70,17 @@ def crear_ficha_personaje(
 
 
 def obtener_fichas_por_usuario(
-    db: Session, id_usuario: uuid.UUID
+    db: Session, id_usuario: uuid.UUID, skip: int = 0, limit: int = 100
 ) -> list[FichaPersonaje]:
     return ficha_personaje_repository.obtener_fichas_por_id_usuario(
-        db=db, id_usuario=id_usuario
+        db=db, id_usuario=id_usuario, skip=skip, limit=limit
     )
 
 
 def obtener_ficha_por_id(
-    db: Session, id_ficha: uuid.UUID, id_usuario: uuid.UUID
+    db: Session,
+    id_ficha: uuid.UUID,
+    id_usuario: uuid.UUID,
 ) -> FichaPersonaje:
     ficha: FichaPersonaje | None = ficha_personaje_repository.obtener_ficha_por_id(
         db=db, id_ficha=id_ficha
@@ -94,7 +96,11 @@ def obtener_ficha_por_id(
 
 
 def obtener_fichas_por_au(
-    db: Session, id_usuario: uuid.UUID, id_au: uuid.UUID
+    db: Session,
+    id_usuario: uuid.UUID,
+    id_au: uuid.UUID,
+    skip: int = 0,
+    limit: int = 100,
 ) -> list[FichaPersonaje]:
     au: Au | None = au_repository.obtener_au_por_id(db=db, id_au=id_au)
     if not au:
@@ -105,67 +111,91 @@ def obtener_fichas_por_au(
             codigo_http=status.HTTP_403_FORBIDDEN,
         )
     return ficha_personaje_repository.obtener_fichas_por_au(
-        db=db, id_usuario=id_usuario, id_au=id_au
+        db=db, id_usuario=id_usuario, id_au=id_au, skip=skip, limit=limit
     )
 
 
 def obtener_fichas_por_nombre_personaje(
-    db: Session, id_usuario: uuid.UUID, nombre_personaje: str
+    db: Session,
+    id_usuario: uuid.UUID,
+    nombre_personaje: str,
+    skip: int = 0,
+    limit: int = 100,
 ) -> list[FichaPersonaje]:
     if not nombre_personaje:
         raise ErrorDatosInvalidos(
             mensaje="Error: Debe ingresar un nombre de personaje."
         )
     return ficha_personaje_repository.obtener_fichas_por_nombre_personaje(
-        db=db, id_usuario=id_usuario, nombre_personaje=nombre_personaje
+        db=db,
+        id_usuario=id_usuario,
+        nombre_personaje=nombre_personaje,
+        skip=skip,
+        limit=limit,
     )
 
 
 def obtener_fichas_por_signo(
-    db: Session, id_usuario: uuid.UUID, signo_zodiacal: str
+    db: Session,
+    id_usuario: uuid.UUID,
+    signo_zodiacal: str,
+    skip: int = 0,
+    limit: int = 100,
 ) -> list[FichaPersonaje]:
     if not signo_zodiacal:
         raise ErrorDatosInvalidos(mensaje="Error: Debe ingresar un signo zodiacal.")
     return ficha_personaje_repository.obtener_fichas_por_signo(
-        db=db, id_usuario=id_usuario, signo_zodiacal=signo_zodiacal
+        db=db,
+        id_usuario=id_usuario,
+        signo_zodiacal=signo_zodiacal,
+        skip=skip,
+        limit=limit,
     )
 
 
 def obtener_fichas_por_sexo(
-    db: Session, id_usuario: uuid.UUID, sexo: str
+    db: Session, id_usuario: uuid.UUID, sexo: str, skip: int = 0, limit: int = 100
 ) -> list[FichaPersonaje]:
     if not sexo:
         raise ErrorDatosInvalidos(mensaje="Error: Debe ingresar un sexo.")
     return ficha_personaje_repository.obtener_fichas_por_sexo(
-        db=db, id_usuario=id_usuario, sexo=sexo
+        db=db, id_usuario=id_usuario, sexo=sexo, skip=skip, limit=limit
     )
 
 
 def obtener_fichas_por_cumpleanos(
-    db: Session, id_usuario: uuid.UUID, fecha_cumpleanos: date
+    db: Session,
+    id_usuario: uuid.UUID,
+    fecha_cumpleanos: date,
+    skip: int = 0,
+    limit: int = 100,
 ) -> list[FichaPersonaje]:
     return ficha_personaje_repository.obtener_fichas_por_cumpleanos(
-        db=db, id_usuario=id_usuario, fecha_cumpleanos=fecha_cumpleanos
+        db=db,
+        id_usuario=id_usuario,
+        fecha_cumpleanos=fecha_cumpleanos,
+        skip=skip,
+        limit=limit,
     )
 
 
 def obtener_fichas_por_dia_cumpleanos(
-    db: Session, id_usuario: uuid.UUID, dia: int
+    db: Session, id_usuario: uuid.UUID, dia: int, skip: int = 0, limit: int = 100
 ) -> list[FichaPersonaje]:
     if dia < 1 or dia > 31:
         raise ErrorDatosInvalidos(mensaje="Error: El día debe estar entre 1 y 31.")
     return ficha_personaje_repository.obtener_fichas_por_dia_cumpleanos(
-        db=db, id_usuario=id_usuario, dia=dia
+        db=db, id_usuario=id_usuario, dia=dia, skip=skip, limit=limit
     )
 
 
 def obtener_fichas_por_mes_cumpleanos(
-    db: Session, id_usuario: uuid.UUID, mes: int
+    db: Session, id_usuario: uuid.UUID, mes: int, skip: int = 0, limit: int = 100
 ) -> list[FichaPersonaje]:
     if mes < 1 or mes > 12:
         raise ErrorDatosInvalidos(mensaje="Error: El mes debe estar entre 1 y 12.")
     return ficha_personaje_repository.obtener_fichas_por_mes_cumpleanos(
-        db=db, id_usuario=id_usuario, mes=mes
+        db=db, id_usuario=id_usuario, mes=mes, skip=skip, limit=limit
     )
 
 

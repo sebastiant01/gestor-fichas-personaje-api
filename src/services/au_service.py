@@ -36,8 +36,12 @@ def crear_au(
     return au_repository.crear_au(db=db, au=nuevo_au)
 
 
-def obtener_aus_por_usuario(db: Session, id_usuario: uuid.UUID) -> list[Au]:
-    return au_repository.obtener_aus_por_id_usuario(db=db, id_usuario=id_usuario)
+def obtener_aus_por_usuario(
+    db: Session, id_usuario: uuid.UUID, skip: int = 0, limit: int = 100
+) -> list[Au]:
+    return au_repository.obtener_aus_por_id_usuario(
+        db=db, id_usuario=id_usuario, skip=skip, limit=limit
+    )
 
 
 def obtener_au_por_nombre(

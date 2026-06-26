@@ -1,5 +1,5 @@
 from sqlalchemy.orm import Session
-from fastapi import APIRouter, Depends, status
+from fastapi import APIRouter, Depends, Query, status
 from typing import Any, List
 from uuid import UUID
 
@@ -17,6 +17,8 @@ au_router: APIRouter = APIRouter(prefix="/aus", tags=["AUs"])
     path="/", status_code=status.HTTP_200_OK, response_model=List[AuResponse]
 )
 def obtener_aus_por_id_usuario(
+    skip: int = Query(0, ge=0),
+    limit: int = Query(100, ge=1, le=100),
     db: Session = Depends(get_db),
     payload: dict[str, Any] = Depends(verificar_admin),
 ):

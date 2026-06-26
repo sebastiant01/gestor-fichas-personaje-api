@@ -22,11 +22,13 @@ ficha_router: APIRouter = APIRouter(prefix="/fichas", tags=["Fichas de personaje
     response_model=List[FichaPersonajeResponse],
 )
 def obtener_fichas_por_usuario(
+    skip: int = Query(0, ge=0),
+    limit: int = Query(100, ge=1, le=100),
     db: Session = Depends(get_db),
     payload: dict[str, Any] = Depends(verificar_admin),
 ):
     return ficha_personaje_service.obtener_fichas_por_usuario(
-        db=db, id_usuario=get_id_usuario(payload=payload)
+        db=db, id_usuario=get_id_usuario(payload=payload), skip=skip, limit=limit
     )
 
 
@@ -37,6 +39,8 @@ def obtener_fichas_por_usuario(
 )
 def obtener_fichas_por_nombre(
     nombre_personaje: str = Query(..., min_length=1, max_length=100),
+    skip: int = Query(0, ge=0),
+    limit: int = Query(100, ge=1, le=100),
     db: Session = Depends(get_db),
     payload: dict[str, Any] = Depends(verificar_admin),
 ):
@@ -44,6 +48,8 @@ def obtener_fichas_por_nombre(
         db=db,
         id_usuario=get_id_usuario(payload=payload),
         nombre_personaje=nombre_personaje,
+        skip=skip,
+        limit=limit,
     )
 
 
@@ -54,6 +60,8 @@ def obtener_fichas_por_nombre(
 )
 def obtener_fichas_por_signo(
     signo_zodiacal: str = Query(..., min_length=1, max_length=20),
+    skip: int = Query(0, ge=0),
+    limit: int = Query(100, ge=1, le=100),
     db: Session = Depends(get_db),
     payload: dict[str, Any] = Depends(verificar_admin),
 ):
@@ -61,6 +69,8 @@ def obtener_fichas_por_signo(
         db=db,
         id_usuario=get_id_usuario(payload=payload),
         signo_zodiacal=signo_zodiacal,
+        skip=skip,
+        limit=limit,
     )
 
 
@@ -71,6 +81,8 @@ def obtener_fichas_por_signo(
 )
 def obtener_fichas_por_sexo(
     sexo: str = Query(..., min_length=1, max_length=30),
+    skip: int = Query(0, ge=0),
+    limit: int = Query(100, ge=1, le=100),
     db: Session = Depends(get_db),
     payload: dict[str, Any] = Depends(verificar_admin),
 ):
@@ -78,6 +90,8 @@ def obtener_fichas_por_sexo(
         db=db,
         id_usuario=get_id_usuario(payload=payload),
         sexo=sexo,
+        skip=skip,
+        limit=limit,
     )
 
 
@@ -88,6 +102,8 @@ def obtener_fichas_por_sexo(
 )
 def obtener_fichas_por_cumpleanos(
     fecha_cumpleanos: date = Query(...),
+    skip: int = Query(0, ge=0),
+    limit: int = Query(100, ge=1, le=100),
     db: Session = Depends(get_db),
     payload: dict[str, Any] = Depends(verificar_admin),
 ):
@@ -95,6 +111,8 @@ def obtener_fichas_por_cumpleanos(
         db=db,
         id_usuario=get_id_usuario(payload=payload),
         fecha_cumpleanos=fecha_cumpleanos,
+        skip=skip,
+        limit=limit,
     )
 
 
@@ -105,6 +123,8 @@ def obtener_fichas_por_cumpleanos(
 )
 def obtener_fichas_por_dia_cumpleanos(
     dia: int = Query(..., ge=1, le=31),
+    skip: int = Query(0, ge=0),
+    limit: int = Query(100, ge=1, le=100),
     db: Session = Depends(get_db),
     payload: dict[str, Any] = Depends(verificar_admin),
 ):
@@ -112,6 +132,8 @@ def obtener_fichas_por_dia_cumpleanos(
         db=db,
         id_usuario=get_id_usuario(payload=payload),
         dia=dia,
+        skip=skip,
+        limit=limit,
     )
 
 
@@ -122,6 +144,8 @@ def obtener_fichas_por_dia_cumpleanos(
 )
 def obtener_fichas_por_mes_cumpleanos(
     mes: int = Query(..., ge=1, le=12),
+    skip: int = Query(0, ge=0),
+    limit: int = Query(100, ge=1, le=100),
     db: Session = Depends(get_db),
     payload: dict[str, Any] = Depends(verificar_admin),
 ):
@@ -129,6 +153,8 @@ def obtener_fichas_por_mes_cumpleanos(
         db=db,
         id_usuario=get_id_usuario(payload=payload),
         mes=mes,
+        skip=skip,
+        limit=limit,
     )
 
 
