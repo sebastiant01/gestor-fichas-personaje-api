@@ -25,7 +25,10 @@ app: FastAPI = FastAPI(title="Coche Biblioteca", version="1.0.0")
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:4200"],  # URL de Angular en desarrollo
+    allow_origins=[
+        "http://localhost:4200",
+        "https://coche-biblioteca-70aa7.web.app",
+    ],  # URL de Angular en desarrollo y app desplegada
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
