@@ -11,6 +11,7 @@ from src.exceptions.excepciones import (
     ErrorNoEncontrado,
 )
 from src.repositories import ficha_personaje_repository, au_repository
+
 from fastapi import status
 
 
@@ -47,11 +48,11 @@ def crear_ficha_personaje(
             codigo_http=status.HTTP_403_FORBIDDEN,
         )
 
-    if edad is not None and au.nombre_au.lower() != "idols":
+    if edad is not None and "idols" not in au.nombre_au.lower():
         raise ErrorDatosInvalidos(
             mensaje="Error: La edad solo está permitida en el AU 'idols'."
         )
-    if au.nombre_au.lower() == "idols" and edad is not None and edad <= 0:
+    if "idols" in au.nombre_au.lower() and edad is not None and edad <= 0:
         raise ErrorDatosInvalidos(mensaje="Error: La edad debe ser mayor a 0.")
 
     nueva_ficha: FichaPersonaje = FichaPersonaje(
@@ -227,7 +228,7 @@ def actualizar_ficha(
         au_destino = ficha.au
 
     if "edad" in kwargs and kwargs["edad"] is not None:
-        if au_destino.nombre_au.lower() != "idols":
+        if "idols" not in au_destino.nombre_au.lower():
             raise ErrorDatosInvalidos(
                 mensaje="Error: La edad solo está permitida en el AU 'idols'."
             )
