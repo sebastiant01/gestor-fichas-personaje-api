@@ -27,3 +27,6 @@ PyJWT==2.13.0
 
 # --- Variables de Entorno ---
 python-dotenv==1.0.1
+
+# --- Cloudinary ---
+cloudinary==1.45.0
