@@ -193,7 +193,8 @@ def crear_ficha(
 
 @ficha_router.post(path="/upload-image", status_code=status.HTTP_200_OK)
 def upload_imagen(imagen: UploadFile):
-    return subir_imagen(imagen=imagen.file)
+    url = subir_imagen(imagen=imagen.file)
+    return {"secure_url": url}
 
 
 @ficha_router.patch(
