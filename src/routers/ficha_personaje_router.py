@@ -1,6 +1,6 @@
 from datetime import date
 from sqlalchemy.orm import Session
-from fastapi import APIRouter, Depends, status, Query
+from fastapi import APIRouter, Depends, status, Query, UploadFile
 from typing import Any, List
 from uuid import UUID
 
@@ -12,6 +12,7 @@ from src.schemas.ficha_personaje_schema import (
 from src.database.session import get_db
 from src.services import ficha_personaje_service
 from src.utils.jwt_auth import verificar_admin, get_id_usuario
+from src.utils.image_manager import subir_imagen
 
 ficha_router: APIRouter = APIRouter(prefix="/fichas", tags=["Fichas de personaje"])
 
@@ -188,6 +189,11 @@ def crear_ficha(
         id_usuario=get_id_usuario(payload=payload),
         **datos.model_dump(exclude_none=True),
     )
+
+
+@ficha_router.post(path="/upload-image", status_code=status.HTTP_200_OK)
+def upload_imagen(imagen: UploadFile):
+    return subir_imagen(imagen=imagen.file)
 
 
 @ficha_router.patch(
