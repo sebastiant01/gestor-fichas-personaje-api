@@ -1,6 +1,6 @@
 from datetime import date
 from sqlalchemy.orm import Session
-from fastapi import APIRouter, Depends, status, Query, UploadFile
+from fastapi import APIRouter, Depends, status, Query, UploadFile, HTTPException
 from typing import Any, List
 from uuid import UUID
 
@@ -12,7 +12,7 @@ from src.schemas.ficha_personaje_schema import (
 from src.database.session import get_db
 from src.services import ficha_personaje_service
 from src.utils.jwt_auth import verificar_admin, get_id_usuario
-from src.utils.image_manager import subir_imagen
+from src.utils.image_manager import subir_imagen, TIPOS_PERMITIDOS
 
 ficha_router: APIRouter = APIRouter(prefix="/fichas", tags=["Fichas de personaje"])
 
@@ -192,8 +192,18 @@ def crear_ficha(
 
 
 @ficha_router.post(path="/upload-image", status_code=status.HTTP_200_OK)
-def upload_imagen(imagen: UploadFile):
-    url = subir_imagen(imagen=imagen.file)
+def upload_imagen(
+    imagen: UploadFile,
+    id_ficha: UUID | None = Query(None),
+    payload: dict[str, Any] = Depends(verificar_admin),
+):
+    if imagen.content_type not in TIPOS_PERMITIDOS:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Tipo de imagen no permitido.",
+        )
+    public_id = str(id_ficha) if id_ficha else None
+    url = subir_imagen(imagen=imagen.file, public_id=public_id)
     return {"secure_url": url}
 
 
