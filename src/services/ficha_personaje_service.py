@@ -11,8 +11,9 @@ from src.exceptions.excepciones import (
     ErrorNoEncontrado,
 )
 from src.repositories import ficha_personaje_repository, au_repository
+from src.utils.image_manager import eliminar_imagen, TIPOS_PERMITIDOS, subir_imagen
 
-from fastapi import status
+from fastapi import status, UploadFile
 
 
 def crear_ficha_personaje(
@@ -256,3 +257,31 @@ def eliminar_ficha(db: Session, id_ficha: uuid.UUID, id_usuario: uuid.UUID) -> N
             codigo_http=status.HTTP_403_FORBIDDEN,
         )
     ficha_personaje_repository.eliminar_ficha(db=db, ficha=ficha)
+
+
+def subir_imagen_ficha(
+    db: Session,
+    id_usuario: uuid.UUID,
+    imagen: UploadFile,
+    id_ficha: uuid.UUID | None = None,
+) -> str:
+    if imagen.content_type not in TIPOS_PERMITIDOS:
+        raise ErrorDatosInvalidos(mensaje="Error: Tipo de imagen no permitido.")
+    public_id = None
+    if id_ficha is not None:
+        obtener_ficha_por_id(db=db, id_ficha=id_ficha, id_usuario=id_usuario)
+        public_id = str(id_ficha)
+    return subir_imagen(imagen=imagen.file, public_id=public_id)
+
+
+def remover_imagen(
+    db: Session, id_ficha: uuid.UUID, id_usuario: uuid.UUID
+) -> FichaPersonaje:
+    ficha = obtener_ficha_por_id(db=db, id_ficha=id_ficha, id_usuario=id_usuario)
+    if ficha.url_imagen:
+        ficha_personaje_repository.limpiar_imagen(db=db, ficha=ficha)
+        try:
+            eliminar_imagen(public_id=str(id_ficha))
+        except AppException:
+            pass
+    return ficha

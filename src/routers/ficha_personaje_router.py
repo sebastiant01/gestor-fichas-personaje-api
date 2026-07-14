@@ -192,19 +192,33 @@ def crear_ficha(
 
 
 @ficha_router.post(path="/upload-image", status_code=status.HTTP_200_OK)
-def upload_imagen(
+def subir_imagen_a_ficha(
     imagen: UploadFile,
     id_ficha: UUID | None = Query(None),
+    db: Session = Depends(get_db),
     payload: dict[str, Any] = Depends(verificar_admin),
 ):
-    if imagen.content_type not in TIPOS_PERMITIDOS:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Tipo de imagen no permitido.",
-        )
-    public_id = str(id_ficha) if id_ficha else None
-    url = subir_imagen(imagen=imagen.file, public_id=public_id)
+    id_usuario = get_id_usuario(payload=payload)
+    url = ficha_personaje_service.subir_imagen_ficha(
+        db=db, id_usuario=id_usuario, imagen=imagen, id_ficha=id_ficha
+    )
     return {"secure_url": url}
+
+
+@ficha_router.post(
+    path="/remove-image",
+    status_code=status.HTTP_200_OK,
+    response_model=FichaPersonajeResponse,
+)
+def remover_imagen_a_ficha(
+    id_ficha: UUID,
+    db: Session = Depends(get_db),
+    payload: dict[str, Any] = Depends(verificar_admin),
+):
+    id_usuario = get_id_usuario(payload=payload)
+    return ficha_personaje_service.remover_imagen(
+        db=db, id_ficha=id_ficha, id_usuario=id_usuario
+    )
 
 
 @ficha_router.patch(

@@ -1,8 +1,12 @@
+from typing import Any
+
+from src.exceptions.excepciones import AppException
+
 import cloudinary
 import cloudinary.uploader
 from cloudinary.utils import cloudinary_url
 
-from fastapi import UploadFile, HTTPException, status
+from fastapi import status
 
 import os
 from dotenv import load_dotenv
@@ -28,3 +32,19 @@ def subir_imagen(imagen, public_id: str | None = None) -> str:
         invalidate=True,
     )
     return resultado["secure_url"]
+
+
+def eliminar_imagen(public_id: str) -> None:
+    if not public_id:
+        raise AppException(
+            mensaje="No se incluyó el public id del archivo.",
+            codigo_http=status.HTTP_400_BAD_REQUEST,
+        )
+    resultado: dict[str, str] = cloudinary.uploader.destroy(
+        public_id=public_id, invalidate=True
+    )
+    if resultado.get("result") not in ["ok", "not found"]:
+        raise AppException(
+            mensaje="No se pudo remover la imagen.",
+            codigo_http=status.HTTP_502_BAD_GATEWAY,
+        )

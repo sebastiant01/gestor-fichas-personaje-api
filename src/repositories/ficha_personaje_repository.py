@@ -1,4 +1,3 @@
-from typing import Optional
 import uuid
 from datetime import date
 
@@ -148,3 +147,9 @@ def actualizar_ficha(db: Session, ficha: FichaPersonaje, datos: dict) -> FichaPe
 def eliminar_ficha(db: Session, ficha: FichaPersonaje) -> None:
     db.delete(ficha)
     db.commit()
+
+
+def limpiar_imagen(db: Session, ficha: FichaPersonaje) -> None:
+    ficha.url_imagen = None
+    db.commit()
+    db.refresh(ficha)
