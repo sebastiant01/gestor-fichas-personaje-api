@@ -1,4 +1,5 @@
 import uuid
+import json
 from datetime import date
 
 from sqlalchemy.orm import Session
@@ -11,9 +12,19 @@ from src.exceptions.excepciones import (
     ErrorNoEncontrado,
 )
 from src.repositories import ficha_personaje_repository, au_repository
+from src.schemas.ficha_personaje_schema import FichaPersonajeResponse
 from src.utils.image_manager import eliminar_imagen, TIPOS_PERMITIDOS, subir_imagen
+from src.utils.caching_redis import (
+    obtener_respuesta_cache,
+    guardar_respuesta_cache,
+    invalidar_cache,
+)
 
 from fastapi import status, UploadFile
+
+
+def _cache_key_fichas_personajes(id_usuario: uuid.UUID, id_au: uuid.UUID | None = None):
+    return f"fichas:usuario:{id_usuario}:{id_au}"
 
 
 def crear_ficha_personaje(
@@ -68,15 +79,34 @@ def crear_ficha_personaje(
         url_imagen=url_imagen,
         url_musica=url_musica,
     )
-    return ficha_personaje_repository.crear_ficha_personaje(db=db, ficha=nueva_ficha)
+    ficha_creada = ficha_personaje_repository.crear_ficha_personaje(
+        db=db, ficha=nueva_ficha
+    )
+    cache_key_1 = _cache_key_fichas_personajes(id_usuario=id_usuario)
+    cache_key_2 = _cache_key_fichas_personajes(id_usuario=id_usuario, id_au=id_au)
+    invalidar_cache(cache_key_1, cache_key_2)
+    return ficha_creada
 
 
 def obtener_fichas_por_usuario(
     db: Session, id_usuario: uuid.UUID, skip: int = 0, limit: int = 100
-) -> list[FichaPersonaje]:
-    return ficha_personaje_repository.obtener_fichas_por_id_usuario(
+) -> list[FichaPersonaje] | list[dict]:
+    cache_key = _cache_key_fichas_personajes(id_usuario=id_usuario)
+    resultado_cache = obtener_respuesta_cache(cache_key=cache_key)
+    if resultado_cache:
+        return resultado_cache
+
+    fichas = ficha_personaje_repository.obtener_fichas_por_id_usuario(
         db=db, id_usuario=id_usuario, skip=skip, limit=limit
     )
+    fichas_json = json.dumps(
+        [
+            FichaPersonajeResponse.model_validate(f).model_dump(mode="json")
+            for f in fichas
+        ]
+    )
+    guardar_respuesta_cache(cache_key=cache_key, valor=fichas_json)
+    return fichas
 
 
 def obtener_ficha_por_id(
@@ -103,7 +133,11 @@ def obtener_fichas_por_au(
     id_au: uuid.UUID,
     skip: int = 0,
     limit: int = 100,
-) -> list[FichaPersonaje]:
+) -> list[FichaPersonaje] | list[dict]:
+    cache_key = _cache_key_fichas_personajes(id_usuario=id_usuario, id_au=id_au)
+    resultado_cache = obtener_respuesta_cache(cache_key=cache_key)
+    if resultado_cache:
+        return resultado_cache
     au: Au | None = au_repository.obtener_au_por_id(db=db, id_au=id_au)
     if not au:
         raise ErrorNoEncontrado("AU")
@@ -112,9 +146,18 @@ def obtener_fichas_por_au(
             mensaje="Error: No tienes permiso para usar este AU.",
             codigo_http=status.HTTP_403_FORBIDDEN,
         )
-    return ficha_personaje_repository.obtener_fichas_por_au(
+
+    fichas = ficha_personaje_repository.obtener_fichas_por_au(
         db=db, id_usuario=id_usuario, id_au=id_au, skip=skip, limit=limit
     )
+    fichas_json = json.dumps(
+        [
+            FichaPersonajeResponse.model_validate(f).model_dump(mode="json")
+            for f in fichas
+        ]
+    )
+    guardar_respuesta_cache(cache_key=cache_key, valor=fichas_json)
+    return fichas
 
 
 def obtener_fichas_por_nombre_personaje(
@@ -241,8 +284,23 @@ def actualizar_ficha(
         raise ErrorDatosInvalidos(
             mensaje="Error: No se enviaron datos para actualizar."
         )
+    id_au_ficha = ficha.id_au
 
-    return ficha_personaje_repository.actualizar_ficha(db=db, ficha=ficha, datos=datos)
+    ficha_actualizada = ficha_personaje_repository.actualizar_ficha(
+        db=db, ficha=ficha, datos=datos
+    )
+
+    cache_keys = {
+        _cache_key_fichas_personajes(id_usuario=id_usuario),
+        _cache_key_fichas_personajes(id_usuario=id_usuario, id_au=id_au_ficha),
+    }
+    if "id_au" in datos and datos["id_au"] != id_au_ficha:
+        cache_keys.add(
+            _cache_key_fichas_personajes(id_usuario=id_usuario, id_au=datos["id_au"])
+        )
+    invalidar_cache(*cache_keys)
+
+    return ficha_actualizada
 
 
 def eliminar_ficha(db: Session, id_ficha: uuid.UUID, id_usuario: uuid.UUID) -> None:
@@ -256,7 +314,11 @@ def eliminar_ficha(db: Session, id_ficha: uuid.UUID, id_usuario: uuid.UUID) -> N
             mensaje="Error: No tienes permiso para eliminar esta ficha.",
             codigo_http=status.HTTP_403_FORBIDDEN,
         )
+    cache_key_1 = _cache_key_fichas_personajes(id_usuario=id_usuario)
+    cache_key_2 = _cache_key_fichas_personajes(id_usuario=id_usuario, id_au=ficha.id_au)
+
     ficha_personaje_repository.eliminar_ficha(db=db, ficha=ficha)
+    invalidar_cache(cache_key_1, cache_key_2)
 
 
 def subir_imagen_ficha(

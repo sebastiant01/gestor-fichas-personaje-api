@@ -30,3 +30,7 @@ python-dotenv==1.0.1
 
 # --- Cloudinary ---
 cloudinary==1.45.0
+
+# --- Cacheo en memoria --
+redis==8.0.1
+hiredis==3.4.0

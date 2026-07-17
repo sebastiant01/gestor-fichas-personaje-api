@@ -1,13 +1,25 @@
 import uuid
+import json
+
 from sqlalchemy.orm import Session
 from src.entities.au import Au
+from src.schemas.au_schema import AuResponse
 from src.exceptions.excepciones import (
     AppException,
     ErrorDatosInvalidos,
     ErrorNoEncontrado,
 )
 from src.repositories import au_repository
+from src.utils.caching_redis import (
+    obtener_respuesta_cache,
+    guardar_respuesta_cache,
+    invalidar_cache,
+)
 from fastapi import status
+
+
+def _cache_key_aus(id_usuario: uuid.UUID):
+    return f"aus:usuario:{id_usuario}"
 
 
 def crear_au(
@@ -33,15 +45,28 @@ def crear_au(
         nombre_au=nombre_au,
         descripcion_au=descripcion_au,
     )
-    return au_repository.crear_au(db=db, au=nuevo_au)
+    au_creado = au_repository.crear_au(db=db, au=nuevo_au)
+    cache_key = _cache_key_aus(id_usuario=id_usuario)
+    invalidar_cache(cache_key)
+    return au_creado
 
 
 def obtener_aus_por_usuario(
     db: Session, id_usuario: uuid.UUID, skip: int = 0, limit: int = 100
-) -> list[Au]:
-    return au_repository.obtener_aus_por_id_usuario(
+) -> list[Au] | list[dict]:
+    cache_key = _cache_key_aus(id_usuario=id_usuario)
+    resultado_cache = obtener_respuesta_cache(cache_key=cache_key)
+    if resultado_cache:
+        return resultado_cache
+
+    aus = au_repository.obtener_aus_por_id_usuario(
         db=db, id_usuario=id_usuario, skip=skip, limit=limit
     )
+    aus_json = json.dumps(
+        [AuResponse.model_validate(au).model_dump(mode="json") for au in aus]
+    )
+    guardar_respuesta_cache(cache_key=cache_key, valor=aus_json)
+    return aus
 
 
 def obtener_au_por_nombre(
@@ -94,8 +119,11 @@ def actualizar_au(db: Session, id_au: uuid.UUID, id_usuario: uuid.UUID, **kwargs
         raise ErrorDatosInvalidos(
             mensaje="Error: No se enviaron datos para actualizar."
         )
+    au_actualizado = au_repository.actualizar_au(db=db, au=au, datos=datos)
+    cache_key = _cache_key_aus(id_usuario=id_usuario)
+    invalidar_cache(cache_key)
 
-    return au_repository.actualizar_au(db=db, au=au, datos=datos)
+    return au_actualizado
 
 
 def eliminar_au(db: Session, id_au: uuid.UUID, id_usuario: uuid.UUID) -> None:
@@ -108,3 +136,5 @@ def eliminar_au(db: Session, id_au: uuid.UUID, id_usuario: uuid.UUID) -> None:
             codigo_http=status.HTTP_403_FORBIDDEN,
         )
     au_repository.eliminar_au(db=db, au=au)
+    cache_key = _cache_key_aus(id_usuario=id_usuario)
+    invalidar_cache(cache_key)
