@@ -41,3 +41,13 @@ def invalidar_cache(*keys: str) -> None:
             redis.delete(*keys)
     except RedisError:
         pass
+
+
+def invalidar_cache_por_prefijo(*prefijos: str) -> None:
+    try:
+        for prefijo in prefijos:
+            keys = redis.keys(f"{prefijo}*")
+            if keys:
+                redis.delete(*keys)
+    except RedisError:
+        pass

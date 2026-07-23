@@ -17,14 +17,19 @@ from src.utils.image_manager import eliminar_imagen, TIPOS_PERMITIDOS, subir_ima
 from src.utils.caching_redis import (
     obtener_respuesta_cache,
     guardar_respuesta_cache,
-    invalidar_cache,
+    invalidar_cache_por_prefijo,
 )
 
 from fastapi import status, UploadFile
 
 
-def _cache_key_fichas_personajes(id_usuario: uuid.UUID, id_au: uuid.UUID | None = None):
-    return f"fichas:usuario:{id_usuario}:{id_au}"
+def _cache_key_fichas_personajes(
+    id_usuario: uuid.UUID,
+    id_au: uuid.UUID | None = None,
+    skip: int = 0,
+    limit: int = 100,
+):
+    return f"fichas:usuario:{id_usuario}:{id_au}:{skip}:{limit}"
 
 
 def crear_ficha_personaje(
@@ -82,16 +87,19 @@ def crear_ficha_personaje(
     ficha_creada = ficha_personaje_repository.crear_ficha_personaje(
         db=db, ficha=nueva_ficha
     )
-    cache_key_1 = _cache_key_fichas_personajes(id_usuario=id_usuario)
-    cache_key_2 = _cache_key_fichas_personajes(id_usuario=id_usuario, id_au=id_au)
-    invalidar_cache(cache_key_1, cache_key_2)
+    invalidar_cache_por_prefijo(
+        f"fichas:usuario:{id_usuario}:None:",
+        f"fichas:usuario:{id_usuario}:{id_au}:",
+    )
     return ficha_creada
 
 
 def obtener_fichas_por_usuario(
     db: Session, id_usuario: uuid.UUID, skip: int = 0, limit: int = 100
 ) -> list[FichaPersonaje] | list[dict]:
-    cache_key = _cache_key_fichas_personajes(id_usuario=id_usuario)
+    cache_key = _cache_key_fichas_personajes(
+        id_usuario=id_usuario, skip=skip, limit=limit
+    )
     resultado_cache = obtener_respuesta_cache(cache_key=cache_key)
     if resultado_cache:
         return resultado_cache
@@ -134,7 +142,9 @@ def obtener_fichas_por_au(
     skip: int = 0,
     limit: int = 100,
 ) -> list[FichaPersonaje] | list[dict]:
-    cache_key = _cache_key_fichas_personajes(id_usuario=id_usuario, id_au=id_au)
+    cache_key = _cache_key_fichas_personajes(
+        id_usuario=id_usuario, id_au=id_au, skip=skip, limit=limit
+    )
     resultado_cache = obtener_respuesta_cache(cache_key=cache_key)
     if resultado_cache:
         return resultado_cache
@@ -290,15 +300,13 @@ def actualizar_ficha(
         db=db, ficha=ficha, datos=datos
     )
 
-    cache_keys = {
-        _cache_key_fichas_personajes(id_usuario=id_usuario),
-        _cache_key_fichas_personajes(id_usuario=id_usuario, id_au=id_au_ficha),
+    prefijos = {
+        f"fichas:usuario:{id_usuario}:None:",
+        f"fichas:usuario:{id_usuario}:{id_au_ficha}:",
     }
     if "id_au" in datos and datos["id_au"] != id_au_ficha:
-        cache_keys.add(
-            _cache_key_fichas_personajes(id_usuario=id_usuario, id_au=datos["id_au"])
-        )
-    invalidar_cache(*cache_keys)
+        prefijos.add(f"fichas:usuario:{id_usuario}:{datos["id_au"]}:")
+    invalidar_cache_por_prefijo(*prefijos)
 
     return ficha_actualizada
 
@@ -314,11 +322,13 @@ def eliminar_ficha(db: Session, id_ficha: uuid.UUID, id_usuario: uuid.UUID) -> N
             mensaje="Error: No tienes permiso para eliminar esta ficha.",
             codigo_http=status.HTTP_403_FORBIDDEN,
         )
-    cache_key_1 = _cache_key_fichas_personajes(id_usuario=id_usuario)
-    cache_key_2 = _cache_key_fichas_personajes(id_usuario=id_usuario, id_au=ficha.id_au)
+    id_ficha_au = ficha.id_au
 
     ficha_personaje_repository.eliminar_ficha(db=db, ficha=ficha)
-    invalidar_cache(cache_key_1, cache_key_2)
+    invalidar_cache_por_prefijo(
+        f"fichas:usuario:{id_usuario}:None:",
+        f"fichas:usuario:{id_usuario}:{id_ficha_au}:",
+    )
 
 
 def subir_imagen_ficha(
