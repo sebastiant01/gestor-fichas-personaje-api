@@ -10,6 +10,25 @@ from src.routers import au_router
 from src.routers import ficha_personaje_router
 from src.exceptions.exception_handlers import registrar_error_handlers
 
+tags_metadata: list[dict[str, str]] = [
+    {
+        "name": "Auth",
+        "description": "Manejo de autenticación (login) del usuario y generación de tokens JWT.",
+    },
+    {
+        "name": "Usuarios",
+        "description": "Métodos HTTP con usuarios. Por el momento solo disponible para admins.",
+    },
+    {
+        "name": "AUs",
+        "description": "Administración y manejo de AUs (Universos Alternos).",
+    },
+    {
+        "name": "Fichas de personaje",
+        "description": "Administración y manejo de fichas de personajes e imágenes.",
+    },
+]
+
 
 @asynccontextmanager
 async def lifespan(_app: FastAPI):
@@ -21,7 +40,12 @@ async def lifespan(_app: FastAPI):
     yield
 
 
-app: FastAPI = FastAPI(title="Coche Biblioteca", version="1.0.0")
+app: FastAPI = FastAPI(
+    title="Coche Biblioteca",
+    version="1.0.0",
+    summary='API REST del proyecto "Coche Biblioteca"',
+    openapi_tags=tags_metadata,
+)
 
 app.add_middleware(
     CORSMiddleware,

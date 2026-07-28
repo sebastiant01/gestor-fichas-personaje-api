@@ -17,10 +17,10 @@ au_router: APIRouter = APIRouter(prefix="/aus", tags=["AUs"])
     path="/", status_code=status.HTTP_200_OK, response_model=List[AuResponse]
 )
 def obtener_aus_por_id_usuario(
-    skip: Annotated[int, Query(0, ge=0)],
-    limit: Annotated[int, Query(100, ge=1, le=100)],
     db: Annotated[Session, Depends(get_db)],
     payload: Annotated[dict[str, Any], Depends(verificar_admin)],
+    skip: Annotated[int, Query(ge=0)] = 0,
+    limit: Annotated[int, Query(ge=1, le=100)] = 100,
 ):
     return au_service.obtener_aus_por_usuario(
         db=db, id_usuario=get_id_usuario(payload=payload), skip=skip, limit=limit

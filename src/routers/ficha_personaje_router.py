@@ -195,9 +195,9 @@ def crear_ficha(
 @ficha_router.post(path="/upload-image", status_code=status.HTTP_200_OK)
 def subir_imagen_a_ficha(
     imagen: UploadFile,
-    id_ficha: Annotated[UUID | None, Query(None)],
     db: Annotated[Session, Depends(get_db)],
     payload: Annotated[dict[str, Any], Depends(verificar_admin)],
+    id_ficha: Annotated[UUID | None, Query()] = None,
 ):
     id_usuario = get_id_usuario(payload=payload)
     url = ficha_personaje_service.subir_imagen_ficha(
