@@ -1,6 +1,6 @@
 from sqlalchemy.orm import Session
 from fastapi import APIRouter, Depends, Query, status
-from typing import Any, List
+from typing import Any, List, Annotated
 from uuid import UUID
 
 from src.schemas.au_schema import AuCreate, AuUpdate, AuResponse
@@ -17,10 +17,10 @@ au_router: APIRouter = APIRouter(prefix="/aus", tags=["AUs"])
     path="/", status_code=status.HTTP_200_OK, response_model=List[AuResponse]
 )
 def obtener_aus_por_id_usuario(
-    skip: int = Query(0, ge=0),
-    limit: int = Query(100, ge=1, le=100),
-    db: Session = Depends(get_db),
-    payload: dict[str, Any] = Depends(verificar_admin),
+    skip: Annotated[int, Query(0, ge=0)],
+    limit: Annotated[int, Query(100, ge=1, le=100)],
+    db: Annotated[Session, Depends(get_db)],
+    payload: Annotated[dict[str, Any], Depends(verificar_admin)],
 ):
     return au_service.obtener_aus_por_usuario(
         db=db, id_usuario=get_id_usuario(payload=payload), skip=skip, limit=limit
@@ -32,8 +32,8 @@ def obtener_aus_por_id_usuario(
 )
 def obtener_au_por_nombre(
     nombre_au: str,
-    db: Session = Depends(get_db),
-    payload: dict[str, Any] = Depends(verificar_admin),
+    db: Annotated[Session, Depends(get_db)],
+    payload: Annotated[dict[str, Any], Depends(verificar_admin)],
 ):
     return au_service.obtener_au_por_nombre(
         db=db, id_usuario=get_id_usuario(payload=payload), nombre_au=nombre_au
@@ -45,8 +45,8 @@ def obtener_au_por_nombre(
 )
 def obtener_au_por_id(
     id_au: UUID,
-    db: Session = Depends(get_db),
-    payload: dict[str, Any] = Depends(verificar_admin),
+    db: Annotated[Session, Depends(get_db)],
+    payload: Annotated[dict[str, Any], Depends(verificar_admin)],
 ):
     return au_service.obtener_au_por_id(
         db=db, id_au=id_au, id_usuario=get_id_usuario(payload=payload)
@@ -60,8 +60,8 @@ def obtener_au_por_id(
 )
 def obtener_fichas_de_au(
     id_au: UUID,
-    db: Session = Depends(get_db),
-    payload: dict[str, Any] = Depends(verificar_admin),
+    db: Annotated[Session, Depends(get_db)],
+    payload: Annotated[dict[str, Any], Depends(verificar_admin)],
 ):
     return ficha_personaje_service.obtener_fichas_por_au(
         db=db, id_usuario=get_id_usuario(payload=payload), id_au=id_au
@@ -73,8 +73,8 @@ def obtener_fichas_de_au(
 )
 def crear_au(
     datos: AuCreate,
-    db: Session = Depends(get_db),
-    payload: dict[str, Any] = Depends(verificar_admin),
+    db: Annotated[Session, Depends(get_db)],
+    payload: Annotated[dict[str, Any], Depends(verificar_admin)],
 ):
     return au_service.crear_au(
         db=db,
@@ -90,8 +90,8 @@ def crear_au(
 def actualizar_au(
     id_au: UUID,
     datos: AuUpdate,
-    db: Session = Depends(get_db),
-    payload: dict[str, Any] = Depends(verificar_admin),
+    db: Annotated[Session, Depends(get_db)],
+    payload: Annotated[dict[str, Any], Depends(verificar_admin)],
 ):
     return au_service.actualizar_au(
         db=db,
@@ -104,8 +104,8 @@ def actualizar_au(
 @au_router.delete(path="/{id_au}", status_code=status.HTTP_204_NO_CONTENT)
 def eliminar_au(
     id_au: UUID,
-    db: Session = Depends(get_db),
-    payload: dict[str, Any] = Depends(verificar_admin),
+    db: Annotated[Session, Depends(get_db)],
+    payload: Annotated[dict[str, Any], Depends(verificar_admin)],
 ):
     au_service.eliminar_au(
         db=db, id_au=id_au, id_usuario=get_id_usuario(payload=payload)

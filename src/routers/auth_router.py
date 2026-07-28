@@ -1,4 +1,4 @@
-from datetime import timedelta
+from typing import Annotated
 
 from sqlalchemy.orm import Session
 from fastapi import APIRouter, Depends
@@ -8,7 +8,7 @@ from src.entities.usuario import Usuario
 from src.schemas.auth_schema import TokenResponse, RefreshTokenResponse
 from src.services import usuario_service
 from src.database.session import get_db
-from src.exceptions.excepciones import ErrorDatosInvalidos, ErrorNoAutorizadoJWT
+from src.exceptions.excepciones import ErrorNoAutorizadoJWT
 from src.utils.hash_password import verify_password
 from src.utils.jwt_auth import (
     crear_token,
@@ -22,7 +22,8 @@ auth_router: APIRouter = APIRouter(prefix="/auth", tags=["Auth"])
 
 @auth_router.post(path="/login", response_model=TokenResponse)
 def login_usuario(
-    credenciales: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(get_db)
+    credenciales: Annotated[OAuth2PasswordRequestForm, Depends()],
+    db: Annotated[Session, Depends(get_db)],
 ):
     usuario: Usuario = usuario_service.obtener_usuario_por_nombre_usuario(
         db=db, nombre_usuario=credenciales.username
@@ -49,7 +50,7 @@ def login_usuario(
 
 
 @auth_router.post(path="/refresh", response_model=TokenResponse)
-def refresh_token(body: RefreshTokenResponse, db: Session = Depends(get_db)):
+def refresh_token(body: RefreshTokenResponse):
     nuevo_access_token = renovar_token(token=body.refresh_token)
     nuevo_refresh_token = crear_token(
         data=_extraer_data_payload(body.refresh_token), tipo_token="refresh"

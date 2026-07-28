@@ -1,7 +1,8 @@
 from datetime import date
 from sqlalchemy.orm import Session
-from fastapi import APIRouter, Depends, status, Query, UploadFile, HTTPException
-from typing import Any, List
+from fastapi import APIRouter, Depends, status, Query, UploadFile
+from pydantic import BaseModel, Field
+from typing import Any, List, Annotated
 from uuid import UUID
 
 from src.schemas.ficha_personaje_schema import (
@@ -16,19 +17,26 @@ from src.utils.jwt_auth import verificar_admin, get_id_usuario
 ficha_router: APIRouter = APIRouter(prefix="/fichas", tags=["Fichas de personaje"])
 
 
+class FiltroRequest(BaseModel):
+    skip: int = Field(default=0, ge=0)
+    limit: int = Field(default=100, ge=1, le=100)
+
+
 @ficha_router.get(
     path="/",
     status_code=status.HTTP_200_OK,
     response_model=List[FichaPersonajeResponse],
 )
 def obtener_fichas_por_usuario(
-    skip: int = Query(0, ge=0),
-    limit: int = Query(100, ge=1, le=100),
-    db: Session = Depends(get_db),
-    payload: dict[str, Any] = Depends(verificar_admin),
+    filtros: Annotated[FiltroRequest, Query()],
+    db: Annotated[Session, Depends(get_db)],
+    payload: Annotated[dict[str, Any], Depends(verificar_admin)],
 ):
     return ficha_personaje_service.obtener_fichas_por_usuario(
-        db=db, id_usuario=get_id_usuario(payload=payload), skip=skip, limit=limit
+        db=db,
+        id_usuario=get_id_usuario(payload=payload),
+        skip=filtros.skip,
+        limit=filtros.limit,
     )
 
 
@@ -38,18 +46,17 @@ def obtener_fichas_por_usuario(
     response_model=List[FichaPersonajeResponse],
 )
 def obtener_fichas_por_nombre(
-    nombre_personaje: str = Query(..., min_length=1, max_length=100),
-    skip: int = Query(0, ge=0),
-    limit: int = Query(100, ge=1, le=100),
-    db: Session = Depends(get_db),
-    payload: dict[str, Any] = Depends(verificar_admin),
+    filtros: Annotated[FiltroRequest, Query()],
+    db: Annotated[Session, Depends(get_db)],
+    payload: Annotated[dict[str, Any], Depends(verificar_admin)],
+    nombre_personaje: Annotated[str, Query(..., min_length=1, max_length=100)],
 ):
     return ficha_personaje_service.obtener_fichas_por_nombre_personaje(
         db=db,
         id_usuario=get_id_usuario(payload=payload),
         nombre_personaje=nombre_personaje,
-        skip=skip,
-        limit=limit,
+        skip=filtros.skip,
+        limit=filtros.limit,
     )
 
 
@@ -59,18 +66,17 @@ def obtener_fichas_por_nombre(
     response_model=List[FichaPersonajeResponse],
 )
 def obtener_fichas_por_signo(
-    signo_zodiacal: str = Query(..., min_length=1, max_length=20),
-    skip: int = Query(0, ge=0),
-    limit: int = Query(100, ge=1, le=100),
-    db: Session = Depends(get_db),
-    payload: dict[str, Any] = Depends(verificar_admin),
+    filtros: Annotated[FiltroRequest, Query()],
+    db: Annotated[Session, Depends(get_db)],
+    payload: Annotated[dict[str, Any], Depends(verificar_admin)],
+    signo_zodiacal: Annotated[str, Query(..., min_length=1, max_length=20)],
 ):
     return ficha_personaje_service.obtener_fichas_por_signo(
         db=db,
         id_usuario=get_id_usuario(payload=payload),
         signo_zodiacal=signo_zodiacal,
-        skip=skip,
-        limit=limit,
+        skip=filtros.skip,
+        limit=filtros.limit,
     )
 
 
@@ -80,18 +86,17 @@ def obtener_fichas_por_signo(
     response_model=List[FichaPersonajeResponse],
 )
 def obtener_fichas_por_sexo(
-    sexo: str = Query(..., min_length=1, max_length=30),
-    skip: int = Query(0, ge=0),
-    limit: int = Query(100, ge=1, le=100),
-    db: Session = Depends(get_db),
-    payload: dict[str, Any] = Depends(verificar_admin),
+    sexo: Annotated[str, Query(..., min_length=1, max_length=30)],
+    filtros: Annotated[FiltroRequest, Query()],
+    db: Annotated[Session, Depends(get_db)],
+    payload: Annotated[dict[str, Any], Depends(verificar_admin)],
 ):
     return ficha_personaje_service.obtener_fichas_por_sexo(
         db=db,
         id_usuario=get_id_usuario(payload=payload),
         sexo=sexo,
-        skip=skip,
-        limit=limit,
+        skip=filtros.skip,
+        limit=filtros.limit,
     )
 
 
@@ -101,18 +106,17 @@ def obtener_fichas_por_sexo(
     response_model=List[FichaPersonajeResponse],
 )
 def obtener_fichas_por_cumpleanos(
-    fecha_cumpleanos: date = Query(...),
-    skip: int = Query(0, ge=0),
-    limit: int = Query(100, ge=1, le=100),
-    db: Session = Depends(get_db),
-    payload: dict[str, Any] = Depends(verificar_admin),
+    fecha_cumpleanos: Annotated[date, Query(...)],
+    filtros: Annotated[FiltroRequest, Query()],
+    db: Annotated[Session, Depends(get_db)],
+    payload: Annotated[dict[str, Any], Depends(verificar_admin)],
 ):
     return ficha_personaje_service.obtener_fichas_por_cumpleanos(
         db=db,
         id_usuario=get_id_usuario(payload=payload),
         fecha_cumpleanos=fecha_cumpleanos,
-        skip=skip,
-        limit=limit,
+        skip=filtros.skip,
+        limit=filtros.limit,
     )
 
 
@@ -122,18 +126,17 @@ def obtener_fichas_por_cumpleanos(
     response_model=List[FichaPersonajeResponse],
 )
 def obtener_fichas_por_dia_cumpleanos(
-    dia: int = Query(..., ge=1, le=31),
-    skip: int = Query(0, ge=0),
-    limit: int = Query(100, ge=1, le=100),
-    db: Session = Depends(get_db),
-    payload: dict[str, Any] = Depends(verificar_admin),
+    dia: Annotated[int, Query(..., ge=1, le=31)],
+    filtros: Annotated[FiltroRequest, Query()],
+    db: Annotated[Session, Depends(get_db)],
+    payload: Annotated[dict[str, Any], Depends(verificar_admin)],
 ):
     return ficha_personaje_service.obtener_fichas_por_dia_cumpleanos(
         db=db,
         id_usuario=get_id_usuario(payload=payload),
         dia=dia,
-        skip=skip,
-        limit=limit,
+        skip=filtros.skip,
+        limit=filtros.limit,
     )
 
 
@@ -143,18 +146,17 @@ def obtener_fichas_por_dia_cumpleanos(
     response_model=List[FichaPersonajeResponse],
 )
 def obtener_fichas_por_mes_cumpleanos(
-    mes: int = Query(..., ge=1, le=12),
-    skip: int = Query(0, ge=0),
-    limit: int = Query(100, ge=1, le=100),
-    db: Session = Depends(get_db),
-    payload: dict[str, Any] = Depends(verificar_admin),
+    mes: Annotated[int, Query(..., ge=1, le=31)],
+    filtros: Annotated[FiltroRequest, Query()],
+    db: Annotated[Session, Depends(get_db)],
+    payload: Annotated[dict[str, Any], Depends(verificar_admin)],
 ):
     return ficha_personaje_service.obtener_fichas_por_mes_cumpleanos(
         db=db,
         id_usuario=get_id_usuario(payload=payload),
         mes=mes,
-        skip=skip,
-        limit=limit,
+        skip=filtros.skip,
+        limit=filtros.limit,
     )
 
 
@@ -165,8 +167,8 @@ def obtener_fichas_por_mes_cumpleanos(
 )
 def obtener_ficha_por_id(
     id_ficha: UUID,
-    db: Session = Depends(get_db),
-    payload: dict[str, Any] = Depends(verificar_admin),
+    db: Annotated[Session, Depends(get_db)],
+    payload: Annotated[dict[str, Any], Depends(verificar_admin)],
 ):
     return ficha_personaje_service.obtener_ficha_por_id(
         db=db,
@@ -180,8 +182,8 @@ def obtener_ficha_por_id(
 )
 def crear_ficha(
     datos: FichaPersonajeCreate,
-    db: Session = Depends(get_db),
-    payload: dict[str, Any] = Depends(verificar_admin),
+    db: Annotated[Session, Depends(get_db)],
+    payload: Annotated[dict[str, Any], Depends(verificar_admin)],
 ):
     return ficha_personaje_service.crear_ficha_personaje(
         db=db,
@@ -193,9 +195,9 @@ def crear_ficha(
 @ficha_router.post(path="/upload-image", status_code=status.HTTP_200_OK)
 def subir_imagen_a_ficha(
     imagen: UploadFile,
-    id_ficha: UUID | None = Query(None),
-    db: Session = Depends(get_db),
-    payload: dict[str, Any] = Depends(verificar_admin),
+    id_ficha: Annotated[UUID | None, Query(None)],
+    db: Annotated[Session, Depends(get_db)],
+    payload: Annotated[dict[str, Any], Depends(verificar_admin)],
 ):
     id_usuario = get_id_usuario(payload=payload)
     url = ficha_personaje_service.subir_imagen_ficha(
@@ -211,8 +213,8 @@ def subir_imagen_a_ficha(
 )
 def remover_imagen_a_ficha(
     id_ficha: UUID,
-    db: Session = Depends(get_db),
-    payload: dict[str, Any] = Depends(verificar_admin),
+    db: Annotated[Session, Depends(get_db)],
+    payload: Annotated[dict[str, Any], Depends(verificar_admin)],
 ):
     id_usuario = get_id_usuario(payload=payload)
     return ficha_personaje_service.remover_imagen(
@@ -228,8 +230,8 @@ def remover_imagen_a_ficha(
 def actualizar_ficha(
     id_ficha: UUID,
     datos: FichaPersonajeUpdate,
-    db: Session = Depends(get_db),
-    payload: dict[str, Any] = Depends(verificar_admin),
+    db: Annotated[Session, Depends(get_db)],
+    payload: Annotated[dict[str, Any], Depends(verificar_admin)],
 ):
     return ficha_personaje_service.actualizar_ficha(
         db=db,
@@ -242,8 +244,8 @@ def actualizar_ficha(
 @ficha_router.delete(path="/{id_ficha}", status_code=status.HTTP_204_NO_CONTENT)
 def eliminar_ficha(
     id_ficha: UUID,
-    db: Session = Depends(get_db),
-    payload: dict[str, Any] = Depends(verificar_admin),
+    db: Annotated[Session, Depends(get_db)],
+    payload: Annotated[dict[str, Any], Depends(verificar_admin)],
 ):
     ficha_personaje_service.eliminar_ficha(
         db=db,
