@@ -45,10 +45,6 @@ def crear_usuario(db: Session, nombre_usuario: str, contrasena: str) -> Usuario:
     return usuario_repository.crear_usuario(db=db, usuario=nuevo_usuario)
 
 
-def obtener_usuarios(db: Session, skip: int = 0, limit: int = 100) -> list[Usuario]:
-    return usuario_repository.obtener_usuarios(db=db, skip=skip, limit=limit)
-
-
 def obtener_usuario_por_id(db: Session, id_usuario: uuid.UUID) -> Optional[Usuario]:
     if not isinstance(id_usuario, uuid.UUID):
         raise ErrorDatosInvalidos(mensaje="Error: El id es inválido.")
