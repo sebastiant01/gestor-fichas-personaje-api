@@ -16,12 +16,16 @@ class AppException(Exception):
 class ErrorNoEncontrado(AppException):
     def __init__(self, entidad: str):
         super().__init__(
-            mensaje=f"{entidad} no encontrado/a", codigo_http=status.HTTP_404_NOT_FOUND
+            mensaje=f"{entidad} no encontrado/a. Prueba con un nombre existente.",
+            codigo_http=status.HTTP_404_NOT_FOUND,
         )
 
 
 class ErrorDatosInvalidos(AppException):
-    def __init__(self, mensaje="Error: Los datos ingresados no son válidos."):
+    def __init__(
+        self,
+        mensaje="Error: Los datos ingresados no son válidos. Revísalos y vuelve a intentar.",
+    ):
         super().__init__(
             mensaje=mensaje,
         )
@@ -30,7 +34,7 @@ class ErrorDatosInvalidos(AppException):
 class ErrorNoAutorizadoJWT(AppException):
     def __init__(
         self,
-        mensaje: str = "Error: Acceso restringido",
+        mensaje: str = "Error: Acceso restringido, no posees acceso.",
         headers: Dict[str, Any] | None = None,
     ):
         super().__init__(
