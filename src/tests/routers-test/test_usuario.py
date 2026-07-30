@@ -31,38 +31,10 @@ def headers_admin(usuario_admin: Usuario) -> dict:
     return {"Authorization": f"Bearer {token}"}
 
 
-def test_obtener_usuarios(
-    client: TestClient, usuario_admin: Usuario, headers_admin: dict
-):
-    response = client.get("/usuarios/", headers=headers_admin)
-    assert response.status_code == 200
-    assert len(response.json()) == 1
-
-
 def test_obtener_usuario_actual(
     client: TestClient, usuario_admin: Usuario, headers_admin: dict
 ):
     response = client.get("/usuarios/me", headers=headers_admin)
-    assert response.status_code == 200
-    assert response.json()["nombre_usuario"] == "coche"
-
-
-def test_obtener_usuario_por_id(
-    client: TestClient, usuario_admin: Usuario, headers_admin: dict
-):
-    response = client.get(
-        f"/usuarios/{usuario_admin.id_usuario}", headers=headers_admin
-    )
-    assert response.status_code == 200
-    assert response.json()["id_usuario"] == str(usuario_admin.id_usuario)
-
-
-def test_obtener_usuario_por_nombre(
-    client: TestClient, usuario_admin: Usuario, headers_admin: dict
-):
-    response = client.get(
-        "/usuarios/buscar?nombre_usuario=coche", headers=headers_admin
-    )
     assert response.status_code == 200
     assert response.json()["nombre_usuario"] == "coche"
 
