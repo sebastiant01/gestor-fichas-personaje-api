@@ -1,3 +1,11 @@
+"""
+Fabricación de la aplicación FastAPI «Coche Biblioteca».
+
+Este módulo debe residir en la raíz del proyecto para que Uvicorn resuelva
+``api_config:app`` correctamente. Registra CORS, manejadores de errores,
+el ciclo de vida (creación de tablas al arranque) y todos los routers.
+"""
+
 from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
@@ -32,6 +40,7 @@ tags_metadata: list[dict[str, str]] = [
 
 @asynccontextmanager
 async def lifespan(_app: FastAPI):
+    """Inicializa recursos al arrancar la app (p. ej. metadatos ORM en BD)."""
     from src.entities.usuario import Usuario
     from src.entities.au import Au
     from src.entities.ficha_personaje import FichaPersonaje

@@ -1,3 +1,9 @@
+"""
+Modelo ORM de la tabla ``usuarios``.
+
+Representa cuentas de administrador con contraseña hasheada (Argon2).
+"""
+
 from __future__ import annotations
 import uuid
 from datetime import datetime
@@ -15,6 +21,8 @@ if TYPE_CHECKING:
 
 
 class Usuario(Base):
+    """Usuario del sistema; dueño de AUs y fichas de personaje."""
+
     __tablename__: str = "usuarios"
 
     id_usuario: Mapped[uuid.UUID] = mapped_column(
@@ -43,6 +51,7 @@ class Usuario(Base):
     def __init__(
         self, nombre_usuario: str, contrasena_hash: str, es_admin: bool = False
     ):
+        """Construye un usuario; ``id_usuario`` y fechas los asigna la BD."""
         self.nombre_usuario = nombre_usuario
         self.contrasena_hash = contrasena_hash
         self.es_admin = es_admin

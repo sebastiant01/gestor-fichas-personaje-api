@@ -1,9 +1,11 @@
+"""Clase base declarativa de SQLAlchemy y utilidad para crear tablas."""
+
 from sqlalchemy.orm import DeclarativeBase
 from src.database.engine import engine
 
 
 class Base(DeclarativeBase):
-    pass
+    """Metadatos compartidos por todas las entidades ORM del proyecto."""
 
 
 def crear_tablas() -> None:

@@ -1,3 +1,9 @@
+"""
+Modelo ORM de la tabla ``aus`` (universos alternos).
+
+Cada AU pertenece a un usuario; el par (usuario, nombre_au) es único.
+"""
+
 from __future__ import annotations
 import uuid
 from datetime import datetime
@@ -15,6 +21,8 @@ if TYPE_CHECKING:
 
 
 class Au(Base):
+    """Universo alterno donde se agrupan fichas de personaje."""
+
     __tablename__: str = "aus"
     __table_args__ = (
         UniqueConstraint("id_usuario", "nombre_au", name="uq_au_usuario_nombre"),
@@ -46,6 +54,7 @@ class Au(Base):
     def __init__(
         self, id_usuario: uuid.UUID, nombre_au: str, descripcion_au: str | None = None
     ):
+        """Crea un AU asociado al ``id_usuario`` indicado."""
         self.id_usuario = id_usuario
         self.nombre_au = nombre_au
         self.descripcion_au = descripcion_au

@@ -1,3 +1,9 @@
+"""
+Motor SQLAlchemy conectado a PostgreSQL (Neon).
+
+Lee ``DATABASE_URL`` desde el entorno y configura pool con pre-ping y SSL.
+"""
+
 import os
 
 from dotenv import load_dotenv

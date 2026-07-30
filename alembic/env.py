@@ -1,3 +1,9 @@
+"""
+Entorno de migraciones Alembic.
+
+Importa ``Base.metadata`` y las entidades para autogenerar revisiones.
+"""
+
 from logging.config import fileConfig
 
 from sqlalchemy import engine_from_config

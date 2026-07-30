@@ -1,3 +1,10 @@
+"""
+Cliente Redis opcional para cachear listados JSON de AUs y fichas.
+
+Si Redis no está disponible, las funciones fallan en silencio y la app sigue
+consultando la base de datos.
+"""
+
 from redis import RedisError, Redis
 import os
 import json
@@ -18,6 +25,7 @@ redis: Redis = Redis(
 
 
 def obtener_respuesta_cache(cache_key: str) -> Optional[list[dict[str, Any]]]:
+    """Lee y deserializa una lista cacheada; ``None`` si no hay entrada o hay error."""
     try:
         respuesta_json = redis.get(name=cache_key)
         if respuesta_json:
@@ -29,6 +37,7 @@ def obtener_respuesta_cache(cache_key: str) -> Optional[list[dict[str, Any]]]:
 def guardar_respuesta_cache(
     cache_key: str, valor: str, ttl_segundos: int = 120
 ) -> None:
+    """Guarda JSON en Redis con TTL por defecto de 120 segundos."""
     try:
         redis.setex(name=cache_key, time=ttl_segundos, value=valor)
     except RedisError:
@@ -36,6 +45,7 @@ def guardar_respuesta_cache(
 
 
 def invalidar_cache(*keys: str) -> None:
+    """Elimina claves concretas del cache."""
     try:
         if keys:
             redis.delete(*keys)
@@ -44,6 +54,7 @@ def invalidar_cache(*keys: str) -> None:
 
 
 def invalidar_cache_por_prefijo(*prefijos: str) -> None:
+    """Elimina todas las claves que empiezan por cada prefijo dado."""
     try:
         for prefijo in prefijos:
             keys = redis.keys(f"{prefijo}*")

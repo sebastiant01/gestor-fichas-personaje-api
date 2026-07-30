@@ -1,3 +1,5 @@
+"""Tests unitarios del servicio ``ficha_personaje_service``."""
+
 import uuid
 from datetime import date
 import pytest

@@ -1,3 +1,10 @@
+"""
+Subida y borrado de imágenes de fichas en Cloudinary.
+
+Configuración vía ``CLOUDINARY_NAME``, ``CLOUDINARY_API_KEY`` y
+``CLOUDINARY_API_SECRET``.
+"""
+
 from typing import Any
 
 from src.exceptions.excepciones import AppException
@@ -24,6 +31,13 @@ TIPOS_PERMITIDOS = ["image/jpg", "image/jpeg", "image/png", "image/webp"]
 
 
 def subir_imagen(imagen, public_id: str | None = None) -> str:
+    """
+    Sube un archivo al folder ``fichas_personajes`` y devuelve ``secure_url``.
+
+    Args:
+        imagen: Objeto file-like legible por Cloudinary.
+        public_id: Identificador opcional (p. ej. UUID de la ficha) para overwrite.
+    """
     resultado = cloudinary.uploader.upload(
         file=imagen,
         folder="fichas_personajes",
@@ -35,6 +49,7 @@ def subir_imagen(imagen, public_id: str | None = None) -> str:
 
 
 def eliminar_imagen(public_id: str) -> None:
+    """Destruye el recurso en Cloudinary; lanza ``AppException`` si la API falla."""
     if not public_id:
         raise AppException(
             mensaje="No se incluyó el public id del archivo.",

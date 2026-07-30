@@ -1,3 +1,9 @@
+"""Reglas de negocio para universos alternos (AUs).
+
+Incluye control de propiedad, nombres únicos por usuario e invalidación
+de cache Redis.
+"""
+
 import uuid
 import json
 
@@ -18,7 +24,15 @@ from src.utils.caching_redis import (
 from fastapi import status
 
 
-def _cache_key_aus(id_usuario: uuid.UUID):
+def _cache_key_aus(id_usuario: uuid.UUID) -> str:
+    """Construye la clave Redis para el listado de AUs de un usuario.
+
+    Args:
+        id_usuario: Identificador UUID del usuario propietario.
+
+    Returns:
+        str: Clave Redis en el formato ``aus:usuario:<id_usuario>``.
+    """
     return f"aus:usuario:{id_usuario}"
 
 
@@ -28,6 +42,22 @@ def crear_au(
     nombre_au: str,
     descripcion_au: str | None = None,
 ) -> Au:
+    """Crea un AU para el usuario indicado e invalida su cache de listado.
+
+    Args:
+        db: Sesión de base de datos.
+        id_usuario: Identificador UUID del usuario propietario.
+        nombre_au: Nombre del nuevo AU; debe ser único por usuario.
+        descripcion_au: Descripción opcional del AU.
+
+    Returns:
+        Au: AU recién creado.
+
+    Raises:
+        ErrorDatosInvalidos: Si ``nombre_au`` está vacío.
+        AppException: Si ya existe un AU con ese nombre para el usuario
+            (409).
+    """
     if not nombre_au:
         raise ErrorDatosInvalidos(mensaje="Error: Debe ingresar un nombre para el AU.")
 
@@ -54,6 +84,23 @@ def crear_au(
 def obtener_aus_por_usuario(
     db: Session, id_usuario: uuid.UUID, skip: int = 0, limit: int = 100
 ) -> list[Au] | list[dict]:
+    """Lista los AUs de un usuario, sirviendo desde cache cuando es posible.
+
+    Si existe una respuesta cacheada para la combinación de usuario,
+    ``skip`` y ``limit``, se devuelve tal cual; en caso contrario se
+    consulta la base de datos y se guarda el resultado en cache.
+
+    Args:
+        db: Sesión de base de datos.
+        id_usuario: Identificador UUID del usuario propietario.
+        skip: Cantidad de registros a omitir.
+        limit: Cantidad máxima de registros a devolver.
+
+    Returns:
+        list[Au] | list[dict]: Entidades ``Au`` si la consulta fue a
+        base de datos, o una lista de diccionarios si el resultado vino
+        de cache.
+    """
     cache_key = _cache_key_aus(id_usuario=id_usuario)
     resultado_cache = obtener_respuesta_cache(cache_key=cache_key)
     if resultado_cache:
@@ -72,6 +119,20 @@ def obtener_aus_por_usuario(
 def obtener_au_por_nombre(
     db: Session, id_usuario: uuid.UUID, nombre_au: str
 ) -> Au | None:
+    """Obtiene un AU por nombre dentro de los AUs del usuario indicado.
+
+    Args:
+        db: Sesión de base de datos.
+        id_usuario: Identificador UUID del usuario propietario.
+        nombre_au: Nombre exacto del AU a buscar.
+
+    Returns:
+        Au: AU encontrado.
+
+    Raises:
+        ErrorDatosInvalidos: Si ``nombre_au`` está vacío.
+        ErrorNoEncontrado: Si no existe un AU con ese nombre.
+    """
     if not nombre_au:
         raise ErrorDatosInvalidos(mensaje="Error: Debe ingresar el nombre del AU.")
     au: Au | None = au_repository.obtener_au_por_nombre(
@@ -83,6 +144,20 @@ def obtener_au_por_nombre(
 
 
 def obtener_au_por_id(db: Session, id_au: uuid.UUID, id_usuario: uuid.UUID) -> Au:
+    """Obtiene un AU verificando que pertenezca al usuario indicado.
+
+    Args:
+        db: Sesión de base de datos.
+        id_au: Identificador UUID del AU.
+        id_usuario: Identificador UUID del usuario propietario esperado.
+
+    Returns:
+        Au: AU solicitado.
+
+    Raises:
+        ErrorNoEncontrado: Si el AU no existe.
+        AppException: Si el AU pertenece a otro usuario (403).
+    """
     au: Au | None = au_repository.obtener_au_por_id(db=db, id_au=id_au)
     if not au:
         raise ErrorNoEncontrado("AU")
@@ -95,6 +170,24 @@ def obtener_au_por_id(db: Session, id_au: uuid.UUID, id_usuario: uuid.UUID) -> A
 
 
 def actualizar_au(db: Session, id_au: uuid.UUID, id_usuario: uuid.UUID, **kwargs) -> Au:
+    """Actualiza un AU propio, validando colisión de nombre e invalidando cache.
+
+    Args:
+        db: Sesión de base de datos.
+        id_au: Identificador UUID del AU a actualizar.
+        id_usuario: Identificador UUID del usuario propietario esperado.
+        **kwargs: Campos a actualizar (por ejemplo ``nombre_au`` o
+            ``descripcion_au``); los valores ``None`` se ignoran.
+
+    Returns:
+        Au: AU actualizado.
+
+    Raises:
+        ErrorNoEncontrado: Si el AU no existe.
+        AppException: Si el AU pertenece a otro usuario (403), o si el
+            nuevo nombre colisiona con otro AU del mismo usuario (409).
+        ErrorDatosInvalidos: Si no se envía ningún dato para actualizar.
+    """
     au: Au | None = au_repository.obtener_au_por_id(db=db, id_au=id_au)
     if not au:
         raise ErrorNoEncontrado("AU")
@@ -127,6 +220,17 @@ def actualizar_au(db: Session, id_au: uuid.UUID, id_usuario: uuid.UUID, **kwargs
 
 
 def eliminar_au(db: Session, id_au: uuid.UUID, id_usuario: uuid.UUID) -> None:
+    """Elimina un AU propio e invalida la cache de listado del usuario.
+
+    Args:
+        db: Sesión de base de datos.
+        id_au: Identificador UUID del AU a eliminar.
+        id_usuario: Identificador UUID del usuario propietario esperado.
+
+    Raises:
+        ErrorNoEncontrado: Si el AU no existe.
+        AppException: Si el AU pertenece a otro usuario (403).
+    """
     au: Au | None = au_repository.obtener_au_por_id(db=db, id_au=id_au)
     if not au:
         raise ErrorNoEncontrado("AU")

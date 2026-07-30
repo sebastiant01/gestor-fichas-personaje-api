@@ -1,3 +1,5 @@
+"""Tests unitarios del repositorio ``au_repository``."""
+
 import uuid
 import pytest
 from sqlalchemy.orm import Session

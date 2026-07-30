@@ -1,3 +1,9 @@
+"""
+Modelo ORM de la tabla ``fichas_personajes``.
+
+Almacena datos de personajes de rol vinculados a un AU y a un usuario.
+"""
+
 from __future__ import annotations
 import uuid
 from datetime import date, datetime
@@ -24,6 +30,8 @@ if TYPE_CHECKING:
 
 
 class FichaPersonaje(Base):
+    """Ficha de personaje con metadatos, URLs opcionales e ``edad`` solo en AU idols."""
+
     __tablename__: str = "fichas_personajes"
 
     id_ficha_personaje: Mapped[uuid.UUID] = mapped_column(
@@ -69,6 +77,7 @@ class FichaPersonaje(Base):
         url_imagen: str | None = None,
         url_musica: str | None = None,
     ):
+        """Instancia una ficha; los identificadores UUID los genera la base de datos."""
         self.id_usuario = id_usuario
         self.id_au = id_au
         self.nombre_personaje = nombre_personaje

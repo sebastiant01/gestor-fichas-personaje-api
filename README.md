@@ -1,268 +1,196 @@
-# coche-biblioteca# Coche Biblioteca — Back-End
+# Gestor de Fichas de Personajes
 
-API REST para la gestión de fichas de personaje de rol de mesa, agrupadas por universos alternos (AUs). Construida con FastAPI y PostgreSQL.
+API REST para administrar universos alternos (AUs) y fichas de personajes
+propios, pensada como herramienta personal de *worldbuilding*. Permite
+organizar personajes por universo narrativo, adjuntarles imágenes y
+consultarlos mediante distintos criterios de búsqueda (nombre, signo
+zodiacal, sexo, cumpleaños).
 
----
+Es una aplicación de un solo usuario administrador (por el momento): no hay registro
+público ni multiusuario, todo el acceso está protegido por autenticación
+JWT.
 
-## Tecnologías
+## Tabla de contenidos
 
-| Capa | Tecnología |
-|---|---|
-| Framework | FastAPI `0.111.0` + Uvicorn `0.30.1` |
-| ORM | SQLAlchemy `2.0.30` (estilo `Mapped` / `mapped_column`) |
-| Migraciones | Alembic `1.13.1` |
-| Base de datos | PostgreSQL (Neon) — driver `psycopg[binary] 3.3.1` |
-| Autenticación | JWT (`PyJWT 2.13.0`) + Argon2 (`argon2-cffi 25.1.0`) |
-| Validación | Pydantic `2.12.5` |
-| Testing | pytest `8.2.2` + httpx `0.27.0` + pytest-asyncio / mock / cov |
+- [Stack tecnológico](#stack-tecnológico)
+- [Arquitectura](#arquitectura)
+- [Modelo de datos y reglas de negocio](#modelo-de-datos-y-reglas-de-negocio)
+- [Endpoints principales](#endpoints-principales)
+- [Cacheo con Redis](#cacheo-con-redis)
+- [Manejo de imágenes](#manejo-de-imágenes)
+- [Instalación](#instalación)
+- [Variables de entorno](#variables-de-entorno)
+- [Migraciones](#migraciones)
+- [Testing](#testing)
+- [Despliegue](#despliegue)
 
----
+## Stack tecnológico
 
-## Estructura del proyecto
+**Backend**
+- [FastAPI](https://fastapi.tiangolo.com/) como framework web (ASGI, sobre Starlette).
+- [SQLAlchemy 2.x](https://www.sqlalchemy.org/) (`Mapped` / `mapped_column`) como ORM.
+- [PostgreSQL](https://www.postgresql.org/) alojado en [Neon](https://neon.tech/).
+- [Alembic](https://alembic.sqlalchemy.org/) para migraciones.
+- [Pydantic 2](https://docs.pydantic.dev/) para validación y serialización.
+- [Argon2](https://github.com/hynek/argon2-cffi) para el hasheo de contraseñas.
+- [PyJWT](https://pyjwt.readthedocs.io/) para autenticación basada en JWT (access + refresh token).
+- [Redis](https://redis.io/) para cacheo de listados (patrón *cache-aside*).
+- [Cloudinary](https://cloudinary.com/) para almacenamiento de imágenes.
 
-```
-coche-biblioteca-backend/
-│
-├── api_config.py              # Configuración de la app FastAPI (raíz del proyecto)
-├── main.py
-├── pytest.ini
-├── alembic.ini
-├── alembic/
-│   └── env.py
-├── .env
-│
-└── src/
-    ├── database/
-    │   ├── base.py
-    │   ├── engine.py
-    │   └── session.py
-    │
-    ├── entities/              # Modelos SQLAlchemy
-    │   ├── au.py
-    │   ├── ficha_personaje.py
-    │   └── usuario.py
-    │
-    ├── exceptions/
-    │   ├── excepciones.py
-    │   └── exception_handlers.py
-    │
-    ├── repositories/
-    │   ├── au_repository.py
-    │   ├── ficha_personaje_repository.py
-    │   └── usuario_repository.py
-    │
-    ├── routers/
-    │   ├── au_router.py
-    │   ├── auth_router.py
-    │   ├── ficha_personaje_router.py
-    │   └── usuario_router.py
-    │
-    ├── schemas/
-    │   ├── au_schema.py
-    │   ├── auth_schema.py
-    │   ├── ficha_personaje_schema.py
-    │   └── usuario_schema.py
-    │
-    ├── services/
-    │   ├── au_service.py
-    │   ├── ficha_personaje_service.py
-    │   └── usuario_service.py
-    │
-    ├── utils/
-    │   ├── hash_password.py
-    │   └── jwt_auth.py
-    │
-    └── tests/
-        ├── conftest.py
-        ├── repository-test/
-        │   ├── test_au.py
-        │   ├── test_ficha_personaje.py
-        │   └── test_usuario.py
-        ├── routers-test/
-        │   ├── test_au.py
-        │   ├── test_auth.py
-        │   ├── test_ficha_personaje.py
-        │   └── test_usuario.py
-        └── service-test/
-            ├── test_au.py
-            ├── test_ficha_personaje.py
-            └── test_usuario.py
-```
+**Frontend**
+- Angular con TypeScript y SCSS.
+- Interceptor HTTP con renovación automática de tokens.
 
-### Patrón de capas
+**Infraestructura**
+- Backend desplegado en [Render](https://render.com/).
+- Frontend desplegado en [Firebase Hosting](https://firebase.google.com/products/hosting).
+
+## Arquitectura
+
+El backend sigue una arquitectura en capas:
 
 ```
-Router → Service → Repository → Entidad (SQLAlchemy)
+routers → services → repositories → models
 ```
 
-Cada capa tiene una única responsabilidad. Los routers no acceden a los repositorios directamente; los servicios contienen todas las reglas de negocio.
+- **Routers**: definen los endpoints, validan el esquema de entrada/salida
+  con Pydantic y delegan toda la lógica a la capa de servicios.
+- **Services**: contienen las reglas de negocio (permisos, validaciones,
+  invalidación de cache, integración con Cloudinary).
+- **Repositories**: funciones planas (no clases) que reciben una `Session`
+  y encapsulan el acceso a la base de datos.
+- **Models**: entidades SQLAlchemy 2.x, con `__init__` manual y
+  `from __future__ import annotations` + `TYPE_CHECKING` para evitar
+  importaciones circulares.
 
----
+## Modelo de datos y reglas de negocio
 
-## Modelos de datos
+Tablas principales: `usuarios`, `aus`, `fichas_personajes`.
 
-### `usuarios`
+- Un `Usuario` tiene muchos `Au` y muchas `FichaPersonaje`.
+- Un `Au` tiene muchas `FichaPersonaje`.
+- `UNIQUE(id_usuario, nombre_au)`: no puede haber dos AUs con el mismo
+  nombre para un mismo usuario.
+- `ON DELETE RESTRICT` en `au_id`: no se puede eliminar un AU que aún
+  tenga fichas asociadas.
+- Pueden existir fichas con el mismo nombre en distintos AUs.
+- El campo `edad` solo está permitido cuando el AU se llama `"idols"`;
+  en cualquier otro AU debe ser `null`.
 
-| Columna | Tipo | Notas |
-|---|---|---|
-| `id_usuario` | UUID | PK, generado automáticamente |
-| `nombre_usuario` | VARCHAR(40) | UNIQUE |
-| `contrasena_hash` | TEXT | Argon2 |
-| `es_admin` | BOOLEAN | `default=False` |
-| `fecha_creacion` | TIMESTAMPTZ | `server_default=now()` |
-| `fecha_edicion` | TIMESTAMPTZ | `onupdate=now()`, nullable |
+## Endpoints principales
 
-### `aus` (universos alternos)
+Todos los endpoints (excepto `/auth/login` y `/auth/refresh`) requieren un
+JWT válido de un usuario administrador.
 
-| Columna | Tipo | Notas |
-|---|---|---|
-| `id_au` | UUID | PK |
-| `id_usuario` | UUID | FK → `usuarios` |
-| `nombre_au` | VARCHAR(50) | UNIQUE por usuario (`uq_au_usuario_nombre`) |
-| `descripcion_au` | TEXT | nullable |
-| `fecha_creacion` | TIMESTAMPTZ | `server_default=now()` |
-| `fecha_edicion` | TIMESTAMPTZ | `onupdate=now()`, nullable |
+**Auth**
+- `POST /auth/login`
+- `POST /auth/refresh`
 
-### `fichas_personajes`
+**Usuarios**
+- `GET /usuarios/me`
+- `POST /usuarios/`
+- `PATCH /usuarios/me`
+- `DELETE /usuarios/me`
 
-| Columna | Tipo | Notas |
-|---|---|---|
-| `id_ficha_personaje` | UUID | PK |
-| `id_usuario` | UUID | FK → `usuarios` |
-| `id_au` | UUID | FK → `aus` (`ON DELETE RESTRICT`) |
-| `nombre_personaje` | VARCHAR(100) | |
-| `sexo` | VARCHAR(30) | |
-| `edad` | SMALLINT | nullable; solo válida en AUs llamados `"idols"` |
-| `fecha_cumpleanos` | DATE | |
-| `signo_zodiacal` | VARCHAR(20) | nullable |
-| `descripcion_personaje` | TEXT | nullable |
-| `url_imagen` | TEXT | nullable |
-| `url_musica` | TEXT | nullable |
-| `fecha_creacion` | TIMESTAMPTZ | `server_default=now()` |
-| `fecha_edicion` | TIMESTAMPTZ | `onupdate=now()`, nullable |
+**AUs**
+- `GET /aus/`
+- `GET /aus/buscar?nombre_au=`
+- `GET /aus/{id_au}`
+- `GET /aus/{id_au}/fichas`
+- `POST /aus/`
+- `PATCH /aus/{id_au}`
+- `DELETE /aus/{id_au}`
 
----
+**Fichas de personaje**
+- `GET /fichas/`
+- `GET /fichas/{id_ficha}`
+- `GET /fichas/buscar/nombre`
+- `GET /fichas/buscar/signo`
+- `GET /fichas/buscar/sexo`
+- `GET /fichas/buscar/cumpleanos`
+- `GET /fichas/buscar/cumpleanos/dia`
+- `GET /fichas/buscar/cumpleanos/mes`
+- `POST /fichas/`
+- `POST /fichas/upload-image`
+- `POST /fichas/remove-image`
+- `PATCH /fichas/{id_ficha}`
+- `DELETE /fichas/{id_ficha}`
 
-## Autenticación
+## Cacheo con Redis
 
-La API usa un esquema de **usuario administrador** (`es_admin=True`). Todos los endpoints protegidos requieren un JWT válido.
+Los listados de AUs y fichas (`/aus/`, `/fichas/`, `/aus/{id_au}/fichas`)
+usan un patrón *cache-aside*:
 
-### Flujo
+1. Se busca la respuesta en Redis con una clave que incluye
+   `id_usuario`, `id_au` (cuando aplica), `skip` y `limit`.
+2. Si hay un resultado cacheado, se devuelve directamente.
+3. Si no, se consulta la base de datos, se guarda el resultado
+   serializado en Redis y se devuelve.
 
-1. `POST /auth/login` con credenciales → devuelve `access_token`.
-2. El token se incluye en la cabecera `Authorization: Bearer <token>`.
-3. La dependencia `verificar_admin` valida el token y extrae el `id_usuario` del claim `sub`.
+Toda operación de escritura (crear, actualizar, eliminar) invalida las
+entradas relacionadas mediante coincidencia de prefijo de clave.
 
-### Endpoints de autenticación
+## Manejo de imágenes
 
-| Método | Ruta | Descripción |
-|---|---|---|
-| `POST` | `/auth/login` | Inicia sesión y devuelve el JWT |
+Las imágenes de las fichas se almacenan en Cloudinary usando el
+`id_ficha_personaje` como `public_id` determinístico (`overwrite=True`,
+`invalidate=True`), lo que permite reemplazar la imagen de una ficha sin
+generar recursos huérfanos. Al eliminar la imagen de una ficha, se limpia
+tanto la referencia en base de datos como el recurso en Cloudinary.
 
----
-
-## Endpoints
-
-Todos los endpoints siguientes requieren autenticación.
-
-### Universos Alternos (`/aus`)
-
-| Método | Ruta | Descripción |
-|---|---|---|
-| `GET` | `/aus` | Lista todos los AUs del usuario |
-| `POST` | `/aus` | Crea un nuevo AU |
-| `GET` | `/aus/{id_au}` | Obtiene un AU por ID |
-| `PUT` | `/aus/{id_au}` | Actualiza un AU |
-| `DELETE` | `/aus/{id_au}` | Elimina un AU (falla si tiene fichas asociadas) |
-
-### Fichas de Personaje (`/fichas`)
-
-| Método | Ruta | Descripción |
-|---|---|---|
-| `GET` | `/fichas` | Lista todas las fichas del usuario |
-| `POST` | `/fichas` | Crea una nueva ficha |
-| `GET` | `/fichas/{id_ficha_personaje}` | Obtiene una ficha por ID |
-| `PUT` | `/fichas/{id_ficha_personaje}` | Actualiza una ficha |
-| `DELETE` | `/fichas/{id_ficha_personaje}` | Elimina una ficha |
-
----
-
-## Reglas de negocio
-
-- El campo `edad` solo es válido en fichas pertenecientes a un AU llamado `"idols"`. En cualquier otro AU, `edad` se almacena como `NULL` independientemente de lo que se envíe.
-- No se pueden eliminar AUs que tengan fichas asociadas (`ON DELETE RESTRICT`).
-- No se pueden crear dos AUs con el mismo nombre para el mismo usuario (constraint `uq_au_usuario_nombre`).
-- Sí se pueden crear fichas con el mismo nombre de personaje en AUs distintos.
-- El `id_usuario` nunca se expone en los schemas de request; se extrae siempre del JWT.
-
----
-
-## Variables de entorno
-
-Crea un archivo `.env` en la raíz del proyecto con las siguientes variables:
-
-```env
-DATABASE_URL=postgresql+psycopg://usuario:contraseña@host/nombre_bd
-SECRET_KEY=tu_clave_secreta_para_jwt
-ALGORITHM=HS256
-ACCESS_TOKEN_EXPIRE_MINUTES=60
-```
-
-> **Nota:** `api_config.py` debe estar en la raíz del proyecto (fuera de `src/`) por requerimientos de resolución de módulos de uvicorn.
-
----
-
-## Instalación y ejecución
+## Instalación
 
 ```bash
-# 1. Clonar el repositorio
-git clone <url-del-repo>
-cd coche-biblioteca-backend
-
-# 2. Crear y activar entorno virtual
+git clone <url-del-repositorio>
+cd gestor-de-fichas-de-personajes
 python -m venv venv
-source venv/bin/activate        # Linux / macOS
-venv\Scripts\Activate.ps1      # Windows PowerShell
-
-# 3. Instalar dependencias
+source venv/bin/activate   # En Windows: venv\Scripts\activate
 pip install -r requirements.txt
 
-# 4. Configurar variables de entorno
-# Crear el archivo .env con las variables indicadas arriba
 
-# 5. Ejecutar migraciones
-alembic upgrade head
+Levantar el servidor en modo desarrollo:
 
-# 6. Iniciar el servidor
+```bash
 uvicorn api_config:app --reload
 ```
 
-La API estará disponible en `http://localhost:8000`. La documentación interactiva en `http://localhost:8000/docs`.
+> `api_config.py` vive en la raíz del proyecto (no dentro de `src/`)
+> porque así lo requiere la forma en que Uvicorn resuelve el import.
 
----
+## Variables de entorno
+
+Crear un archivo `.env` en la raíz del proyecto con, al menos:
+
+```
+DATABASE_URL=postgresql+psycopg://usuario:password@host/dbname
+JWT_SECRET_KEY=
+JWT_ALGORITHM=HS256
+ACCESS_TOKEN_EXPIRE_MINUTES=
+REFRESH_TOKEN_EXPIRE_DAYS=
+REDIS_URL=
+CLOUDINARY_CLOUD_NAME=
+CLOUDINARY_API_KEY=
+CLOUDINARY_API_SECRET=
+```
+
+## Migraciones
+
+```bash
+alembic revision --autogenerate -m "descripción del cambio"
+alembic upgrade head
+```
 
 ## Testing
 
-Los tests están organizados en tres capas: repositorios, servicios y routers. Se usa SQLite en memoria con `pytest` y `httpx` como cliente de pruebas.
-
 ```bash
-# Ejecutar todos los tests
-pytest
-
-# Con reporte de cobertura
-pytest --cov=src
-
-# Output detallado
-pytest -v
+pytest --cov
 ```
 
----
+Se recomienda usar `pytest-mock` para simular dependencias externas
+(Cloudinary, Redis) y `pytest-asyncio` para los casos que lo requieran.
 
-## Decisiones de diseño notables
+## Despliegue
 
-- **Repositorios como funciones puras:** Los repositorios no son clases; son funciones que reciben una `Session` como parámetro, lo que facilita el testing y la inyección de dependencias.
-- **`__init__` manual en entidades:** Cada entidad define su propio `__init__` para mejorar el autocompletado del IDE, ya que SQLAlchemy no lo genera por defecto con el estilo `Mapped`.
-- **`from __future__ import annotations` + `TYPE_CHECKING`:** Se usa en las entidades para evitar importaciones circulares entre relaciones bidireccionales.
-- **Excepciones personalizadas:** Todas las excepciones de negocio están centralizadas en `excepciones.py` con sus manejadores correspondientes en `exception_handlers.py`, permitiendo respuestas HTTP consistentes.
-- **Schemas Pydantic v2:** Los schemas de respuesta usan `ConfigDict(from_attributes=True)` para compatibilidad con instancias ORM.
-- **Utilidades separadas:** La lógica de hashing (`hash_password.py`) y JWT (`jwt_auth.py`) vive en `utils/`, desacoplada de los servicios.
+- **Backend**: Render, usando `gunicorn` con workers de Uvicorn como
+  servidor de producción.
+- **Frontend**: Firebase Hosting.

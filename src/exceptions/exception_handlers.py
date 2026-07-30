@@ -1,3 +1,5 @@
+"""Registro de manejadores globales de excepciones para respuestas JSON coherentes."""
+
 from fastapi import FastAPI, Request, status
 from fastapi.responses import JSONResponse
 from fastapi.exceptions import ResponseValidationError, RequestValidationError

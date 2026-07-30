@@ -1,3 +1,5 @@
+"""Tests de integración HTTP del router ``usuario_router``."""
+
 import pytest
 from fastapi.testclient import TestClient
 from sqlalchemy.orm import Session

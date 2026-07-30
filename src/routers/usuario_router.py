@@ -1,3 +1,5 @@
+"""Endpoints CRUD del perfil de usuario autenticado (admin)."""
+
 from sqlalchemy.orm import Session
 from fastapi import APIRouter, Depends, status
 from typing import Any, Annotated
@@ -17,6 +19,18 @@ def obtener_usuario_actual(
     db: Annotated[Session, Depends(get_db)],
     payload: Annotated[dict[str, Any], Depends(verificar_admin)],
 ):
+    """Devuelve los datos del usuario asociado al JWT recibido.
+
+    Args:
+        db: Sesión de base de datos inyectada por dependencia.
+        payload: Payload del JWT verificado.
+
+    Returns:
+        UsuarioResponse: Datos del usuario autenticado.
+
+    Raises:
+        ErrorNoEncontrado: Si el usuario del token ya no existe.
+    """
     return usuario_service.obtener_usuario_por_id(
         db=db, id_usuario=get_id_usuario(payload=payload)
     )
@@ -32,6 +46,19 @@ def crear_usuario(
     datos: UsuarioCreate,
     db: Annotated[Session, Depends(get_db)],
 ):
+    """Registra un nuevo usuario (requiere un administrador autenticado).
+
+    Args:
+        datos: Nombre de usuario y contraseña del nuevo usuario.
+        db: Sesión de base de datos inyectada por dependencia.
+
+    Returns:
+        UsuarioResponse: Usuario recién creado.
+
+    Raises:
+        ErrorDatosInvalidos: Si el nombre o la contraseña son inválidos.
+        AppException: Si ya existe un usuario con ese nombre (409).
+    """
     return usuario_service.crear_usuario(
         db=db,
         nombre_usuario=datos.nombre_usuario,
@@ -47,6 +74,20 @@ def actualizar_usuario(
     db: Annotated[Session, Depends(get_db)],
     payload: Annotated[dict[str, Any], Depends(verificar_admin)],
 ):
+    """Actualiza el perfil del usuario asociado al JWT recibido.
+
+    Args:
+        datos: Campos a modificar; los valores ``None`` se ignoran.
+        db: Sesión de base de datos inyectada por dependencia.
+        payload: Payload del JWT verificado.
+
+    Returns:
+        UsuarioResponse: Usuario actualizado.
+
+    Raises:
+        ErrorNoEncontrado: Si el usuario del token ya no existe.
+        ErrorDatosInvalidos: Si no se envía ningún dato para actualizar.
+    """
     return usuario_service.actualizar_usuario(
         db=db,
         id_usuario=get_id_usuario(payload=payload),
@@ -59,4 +100,13 @@ def eliminar_usuario(
     db: Annotated[Session, Depends(get_db)],
     payload: Annotated[dict[str, Any], Depends(verificar_admin)],
 ):
+    """Elimina la cuenta del usuario asociado al JWT recibido.
+
+    Args:
+        db: Sesión de base de datos inyectada por dependencia.
+        payload: Payload del JWT verificado.
+
+    Raises:
+        ErrorNoEncontrado: Si el usuario del token ya no existe.
+    """
     usuario_service.eliminar_usuario(db=db, id_usuario=get_id_usuario(payload=payload))

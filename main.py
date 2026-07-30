@@ -1,7 +1,11 @@
 """
-Arranca la API FastAPI (uvicorn).rando e
+Punto de entrada para ejecutar el servidor de desarrollo con Uvicorn.
 
-Documentación interactiva: http://127.0.0.1:8000/docs
+Uso::
+
+    python main.py
+
+Documentación interactiva (Swagger): http://127.0.0.1:8000/docs
 """
 
 import uvicorn

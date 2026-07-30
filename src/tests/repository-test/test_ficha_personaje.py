@@ -1,4 +1,6 @@
 # tests/repositories/test_ficha_personaje_repository.py
+"""Tests unitarios del repositorio ``ficha_personaje_repository``."""
+
 import uuid
 from datetime import date
 import pytest

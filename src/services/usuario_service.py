@@ -1,3 +1,9 @@
+"""
+Reglas de negocio para usuarios: registro, consulta y actualización.
+
+Valida contraseñas, evita duplicados y delega persistencia al repositorio.
+"""
+
 from typing import Optional
 import uuid
 from src.entities.usuario import Usuario
@@ -13,6 +19,7 @@ from fastapi import status
 
 
 def crear_usuario(db: Session, nombre_usuario: str, contrasena: str) -> Usuario:
+    """Registra un usuario con contraseña hasheada; 409 si el nombre ya existe."""
     if not nombre_usuario:
         raise ErrorDatosInvalidos(mensaje="Error: Debe ingresar un nombre.")
     if not contrasena:
@@ -46,6 +53,7 @@ def crear_usuario(db: Session, nombre_usuario: str, contrasena: str) -> Usuario:
 
 
 def obtener_usuario_por_id(db: Session, id_usuario: uuid.UUID) -> Optional[Usuario]:
+    """Devuelve el usuario o lanza ``ErrorNoEncontrado``."""
     if not isinstance(id_usuario, uuid.UUID):
         raise ErrorDatosInvalidos(mensaje="Error: El id es inválido.")
     if not id_usuario:
@@ -60,6 +68,7 @@ def obtener_usuario_por_id(db: Session, id_usuario: uuid.UUID) -> Optional[Usuar
 
 
 def obtener_usuario_por_nombre_usuario(db: Session, nombre_usuario: str) -> Usuario:
+    """Busca por nombre de login; usado en autenticación."""
     if len(nombre_usuario) == 0:
         raise ErrorDatosInvalidos(mensaje="Error: Debe ingresar un nombre de usuario.")
     usuario: Usuario | None = usuario_repository.obtener_usuario_por_nombre_usuario(
@@ -71,6 +80,7 @@ def obtener_usuario_por_nombre_usuario(db: Session, nombre_usuario: str) -> Usua
 
 
 def actualizar_usuario(db: Session, id_usuario: uuid.UUID, **kwargs) -> Usuario:
+    """Actualiza campos no nulos; re-hashea si llega ``contrasena``."""
     usuario: Optional[Usuario] = usuario_repository.obtener_usuario_por_id(
         db, id_usuario
     )
@@ -89,6 +99,7 @@ def actualizar_usuario(db: Session, id_usuario: uuid.UUID, **kwargs) -> Usuario:
 
 
 def eliminar_usuario(db: Session, id_usuario: uuid.UUID) -> None:
+    """Elimina la cuenta si existe."""
     usuario: Optional[Usuario] = usuario_repository.obtener_usuario_por_id(
         db, id_usuario
     )

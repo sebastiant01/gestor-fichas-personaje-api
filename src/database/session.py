@@ -1,3 +1,5 @@
+"""Fábrica de sesiones y dependencia ``get_db`` para FastAPI."""
+
 from typing import Iterator
 
 from sqlalchemy.orm import sessionmaker, Session
@@ -8,7 +10,10 @@ session_local = sessionmaker(bind=engine, autoflush=False, autocommit=False)
 
 def get_db() -> Iterator[Session]:
     """
-    Generador de sesiones de la base de datos.
+    Abre una sesión por petición y la cierra al finalizar.
+
+    Yields:
+        Session: Sesión de SQLAlchemy ligada al motor configurado.
     """
     db: Session = session_local()
 

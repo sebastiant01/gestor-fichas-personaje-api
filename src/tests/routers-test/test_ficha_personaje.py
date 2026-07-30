@@ -1,5 +1,7 @@
 import uuid
 
+"""Tests de integración HTTP del router ``ficha_personaje_router``."""
+
 import pytest
 from datetime import date
 from fastapi.testclient import TestClient
