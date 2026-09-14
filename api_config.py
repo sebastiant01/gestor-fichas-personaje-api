@@ -6,6 +6,8 @@ Este módulo debe residir en la raíz del proyecto para que Uvicorn resuelva
 el ciclo de vida (creación de tablas al arranque) y todos los routers.
 """
 
+from sqlalchemy import text
+from src.database.engine import engine
 from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
@@ -46,7 +48,12 @@ async def lifespan(_app: FastAPI):
     from src.entities.ficha_personaje import FichaPersonaje
 
     crear_tablas()
+
+    with engine.connect() as db:
+        db.execute(text("SELECT 1"))
+
     yield
+    engine.dispose()
 
 
 app: FastAPI = FastAPI(
