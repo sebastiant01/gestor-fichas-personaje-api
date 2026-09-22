@@ -73,6 +73,7 @@ def headers_admin(token_admin: str) -> dict:
 @pytest.fixture
 def client(db: Session) -> Iterator[TestClient]:
     """``TestClient`` de FastAPI con ``get_db`` sobreescrito a la sesión de test."""
+
     def override_get_db():
         yield db
 
