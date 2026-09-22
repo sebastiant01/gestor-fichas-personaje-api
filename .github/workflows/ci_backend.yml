@@ -26,9 +26,13 @@ jobs:
                 pip install -r requirements.txt
 
             - name: Testing con Pytest
+              env:
+                DATABASE_URL: ${{ secrets.DATABASE_URL }}
               run: |
                 python -m pytest src/tests/ -q
 
             - name: Formateo PEP 8 con Black
+              env:
+                DATABASE_URL: ${{ secrets.DATABASE_URL }}
               run: |
                 python -m black src/ --check --quiet
