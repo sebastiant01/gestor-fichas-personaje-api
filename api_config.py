@@ -11,6 +11,7 @@ from src.database.engine import engine
 from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi import status
 
 from src.database.base import crear_tablas
 
@@ -75,6 +76,12 @@ app.add_middleware(
 )
 
 registrar_error_handlers(app=app)
+
+
+@app.get(path="/health", status_code=status.HTTP_200_OK)
+def health():
+    return {"status": "ok"}
+
 
 app.include_router(router=auth_router.auth_router)
 app.include_router(router=usuario_router.usuario_router)
