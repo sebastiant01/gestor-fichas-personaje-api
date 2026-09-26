@@ -28,6 +28,10 @@ jobs:
             - name: Testing con Pytest
               env:
                 DATABASE_URL: "sqlite:///:memory:"
+                JWT_KEY: ${{ secrets.JWT_KEY }}
+                ALGORITHM: ${{ secrets.ALGORITHM }}
+                ACCESS_TOKEN_EXPIRE: 20
+                REFRESH_TOKEN_EXPIRE: 4
               run: |
                 python -m pytest src/tests/ -q
 
