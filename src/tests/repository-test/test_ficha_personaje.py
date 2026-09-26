@@ -163,7 +163,11 @@ def test_obtener_fichas_por_au_retorna_fichas(
     db: Session, usuario_base: Usuario, au_base: Au, ficha_base: FichaPersonaje
 ):
     resultado = ficha_personaje_repository.obtener_fichas_por_au(
-        db=db, id_usuario=usuario_base.id_usuario, id_au=au_base.id_au, skip=0, limit=100
+        db=db,
+        id_usuario=usuario_base.id_usuario,
+        id_au=au_base.id_au,
+        skip=0,
+        limit=100,
     )
 
     assert isinstance(resultado, list)
@@ -180,7 +184,11 @@ def test_obtener_fichas_por_au_no_mezcla_aus(
 ):
     # ficha_base pertenece a au_base; au_idols no tiene fichas
     resultado = ficha_personaje_repository.obtener_fichas_por_au(
-        db=db, id_usuario=usuario_base.id_usuario, id_au=au_idols.id_au, skip=0, limit=100
+        db=db,
+        id_usuario=usuario_base.id_usuario,
+        id_au=au_idols.id_au,
+        skip=0,
+        limit=100,
     )
 
     assert resultado == []
@@ -193,7 +201,11 @@ def test_obtener_fichas_por_nombre_existente(
     db: Session, usuario_base: Usuario, ficha_base: FichaPersonaje
 ):
     resultado = ficha_personaje_repository.obtener_fichas_por_nombre_personaje(
-        db=db, id_usuario=usuario_base.id_usuario, nombre_personaje="Sakura", skip=0, limit=100
+        db=db,
+        id_usuario=usuario_base.id_usuario,
+        nombre_personaje="Sakura",
+        skip=0,
+        limit=100,
     )
 
     assert len(resultado) == 1
@@ -204,7 +216,11 @@ def test_obtener_fichas_por_nombre_inexistente_retorna_lista_vacia(
     db: Session, usuario_base: Usuario
 ):
     resultado = ficha_personaje_repository.obtener_fichas_por_nombre_personaje(
-        db=db, id_usuario=usuario_base.id_usuario, nombre_personaje="Fantasma", skip=0, limit=100
+        db=db,
+        id_usuario=usuario_base.id_usuario,
+        nombre_personaje="Fantasma",
+        skip=0,
+        limit=100,
     )
 
     assert resultado == []
@@ -217,7 +233,11 @@ def test_obtener_fichas_por_signo_existente(
     db: Session, usuario_base: Usuario, ficha_base: FichaPersonaje
 ):
     resultado = ficha_personaje_repository.obtener_fichas_por_signo(
-        db=db, id_usuario=usuario_base.id_usuario, signo_zodiacal="Aries", skip=0, limit=100
+        db=db,
+        id_usuario=usuario_base.id_usuario,
+        signo_zodiacal="Aries",
+        skip=0,
+        limit=100,
     )
 
     assert len(resultado) == 1
@@ -228,7 +248,11 @@ def test_obtener_fichas_por_signo_inexistente_retorna_lista_vacia(
     db: Session, usuario_base: Usuario
 ):
     resultado = ficha_personaje_repository.obtener_fichas_por_signo(
-        db=db, id_usuario=usuario_base.id_usuario, signo_zodiacal="Escorpio", skip=0, limit=100
+        db=db,
+        id_usuario=usuario_base.id_usuario,
+        signo_zodiacal="Escorpio",
+        skip=0,
+        limit=100,
     )
 
     assert resultado == []
@@ -265,7 +289,11 @@ def test_obtener_fichas_por_cumpleanos_existente(
     db: Session, usuario_base: Usuario, ficha_base: FichaPersonaje
 ):
     resultado = ficha_personaje_repository.obtener_fichas_por_cumpleanos(
-        db=db, id_usuario=usuario_base.id_usuario, fecha_cumpleanos=date(2000, 4, 1), skip=0, limit=100
+        db=db,
+        id_usuario=usuario_base.id_usuario,
+        fecha_cumpleanos=date(2000, 4, 1),
+        skip=0,
+        limit=100,
     )
 
     assert len(resultado) == 1
@@ -275,7 +303,11 @@ def test_obtener_fichas_por_cumpleanos_inexistente_retorna_lista_vacia(
     db: Session, usuario_base: Usuario
 ):
     resultado = ficha_personaje_repository.obtener_fichas_por_cumpleanos(
-        db=db, id_usuario=usuario_base.id_usuario, fecha_cumpleanos=date(1999, 1, 1), skip=0, limit=100
+        db=db,
+        id_usuario=usuario_base.id_usuario,
+        fecha_cumpleanos=date(1999, 1, 1),
+        skip=0,
+        limit=100,
     )
 
     assert resultado == []
