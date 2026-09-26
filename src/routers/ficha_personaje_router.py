@@ -37,7 +37,7 @@ class FiltroRequest(BaseModel):
     response_model=List[FichaPersonajeResponse],
 )
 def obtener_fichas_por_usuario(
-    filtros: Annotated[FiltroRequest, Query()],
+    filtros: Annotated[FiltroRequest, Depends()],
     db: Annotated[Session, Depends(get_db)],
     payload: Annotated[dict[str, Any], Depends(verificar_admin)],
 ):
@@ -65,7 +65,7 @@ def obtener_fichas_por_usuario(
     response_model=List[FichaPersonajeResponse],
 )
 def obtener_fichas_por_nombre(
-    filtros: Annotated[FiltroRequest, Query()],
+    filtros: Annotated[FiltroRequest, Depends()],
     db: Annotated[Session, Depends(get_db)],
     payload: Annotated[dict[str, Any], Depends(verificar_admin)],
     nombre_personaje: Annotated[str, Query(..., min_length=1, max_length=100)],
@@ -99,7 +99,7 @@ def obtener_fichas_por_nombre(
     response_model=List[FichaPersonajeResponse],
 )
 def obtener_fichas_por_signo(
-    filtros: Annotated[FiltroRequest, Query()],
+    filtros: Annotated[FiltroRequest, Depends()],
     db: Annotated[Session, Depends(get_db)],
     payload: Annotated[dict[str, Any], Depends(verificar_admin)],
     signo_zodiacal: Annotated[str, Query(..., min_length=1, max_length=20)],
@@ -134,7 +134,7 @@ def obtener_fichas_por_signo(
 )
 def obtener_fichas_por_sexo(
     sexo: Annotated[str, Query(..., min_length=1, max_length=30)],
-    filtros: Annotated[FiltroRequest, Query()],
+    filtros: Annotated[FiltroRequest, Depends()],
     db: Annotated[Session, Depends(get_db)],
     payload: Annotated[dict[str, Any], Depends(verificar_admin)],
 ):
@@ -168,7 +168,7 @@ def obtener_fichas_por_sexo(
 )
 def obtener_fichas_por_cumpleanos(
     fecha_cumpleanos: Annotated[date, Query(...)],
-    filtros: Annotated[FiltroRequest, Query()],
+    filtros: Annotated[FiltroRequest, Depends()],
     db: Annotated[Session, Depends(get_db)],
     payload: Annotated[dict[str, Any], Depends(verificar_admin)],
 ):
@@ -199,7 +199,7 @@ def obtener_fichas_por_cumpleanos(
 )
 def obtener_fichas_por_dia_cumpleanos(
     dia: Annotated[int, Query(..., ge=1, le=31)],
-    filtros: Annotated[FiltroRequest, Query()],
+    filtros: Annotated[FiltroRequest, Depends()],
     db: Annotated[Session, Depends(get_db)],
     payload: Annotated[dict[str, Any], Depends(verificar_admin)],
 ):
@@ -234,7 +234,7 @@ def obtener_fichas_por_dia_cumpleanos(
 )
 def obtener_fichas_por_mes_cumpleanos(
     mes: Annotated[int, Query(..., ge=1, le=12)],
-    filtros: Annotated[FiltroRequest, Query()],
+    filtros: Annotated[FiltroRequest, Depends()],
     db: Annotated[Session, Depends(get_db)],
     payload: Annotated[dict[str, Any], Depends(verificar_admin)],
 ):

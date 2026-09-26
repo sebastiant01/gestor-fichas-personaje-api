@@ -96,7 +96,7 @@ def test_obtener_aus_por_usuario_retorna_lista(
     db: Session, usuario_base: Usuario, au_base: Au
 ):
     resultado = au_repository.obtener_aus_por_id_usuario(
-        db=db, id_usuario=usuario_base.id_usuario
+        db=db, id_usuario=usuario_base.id_usuario, skip=0, limit=100
     )
 
     assert isinstance(resultado, list)
@@ -110,7 +110,7 @@ def test_obtener_aus_por_usuario_retorna_todos(db: Session, usuario_base: Usuari
         )
 
     resultado = au_repository.obtener_aus_por_id_usuario(
-        db=db, id_usuario=usuario_base.id_usuario
+        db=db, id_usuario=usuario_base.id_usuario, skip=0, limit=100
     )
 
     assert len(resultado) == 3
@@ -120,7 +120,7 @@ def test_obtener_aus_por_usuario_sin_aus_retorna_lista_vacia(
     db: Session, usuario_base: Usuario
 ):
     resultado = au_repository.obtener_aus_por_id_usuario(
-        db=db, id_usuario=usuario_base.id_usuario
+        db=db, id_usuario=usuario_base.id_usuario, skip=0, limit=100
     )
 
     assert resultado == []
@@ -188,13 +188,13 @@ def test_eliminar_au_lo_borra_de_db(db: Session, au_base: Au):
 
 def test_eliminar_au_reduce_conteo(db: Session, usuario_base: Usuario, au_base: Au):
     antes = au_repository.obtener_aus_por_id_usuario(
-        db=db, id_usuario=usuario_base.id_usuario
+        db=db, id_usuario=usuario_base.id_usuario, skip=0, limit=100
     )
     assert len(antes) == 1
 
     au_repository.eliminar_au(db=db, au=au_base)
 
     despues = au_repository.obtener_aus_por_id_usuario(
-        db=db, id_usuario=usuario_base.id_usuario
+        db=db, id_usuario=usuario_base.id_usuario, skip=0, limit=100
     )
     assert len(despues) == 0

@@ -82,5 +82,5 @@ def test_eliminar_usuario(
 
 
 def test_endpoint_sin_token(client: TestClient):
-    response = client.get("/usuarios/")
+    response = client.get("/usuarios/me")
     assert response.status_code == 401

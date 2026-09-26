@@ -107,34 +107,6 @@ def test_obtener_usuario_por_nombre_case_sensitive(db: Session, usuario_base: Us
     assert resultado is None
 
 
-# ── obtener_usuarios ──────────────────────────────────────────────────────────
-
-
-def test_obtener_usuarios_retorna_lista(db: Session, usuario_base: Usuario):
-    resultado = usuario_repository.obtener_usuarios(db=db, skip=0, limit=100)
-
-    assert isinstance(resultado, list)
-    assert len(resultado) == 1
-
-
-def test_obtener_usuarios_skip_y_limit(db: Session):
-    for i in range(5):
-        u = Usuario(
-            nombre_usuario=f"usuario_{i}", contrasena_hash="hash", es_admin=False
-        )
-        usuario_repository.crear_usuario(db=db, usuario=u)
-
-    resultado = usuario_repository.obtener_usuarios(db=db, skip=2, limit=2)
-
-    assert len(resultado) == 2
-
-
-def test_obtener_usuarios_lista_vacia(db: Session):
-    resultado = usuario_repository.obtener_usuarios(db=db, skip=0, limit=100)
-
-    assert resultado == []
-
-
 # ── actualizar_usuario ────────────────────────────────────────────────────────
 
 
@@ -192,13 +164,3 @@ def test_eliminar_usuario_lo_borra_de_db(db: Session, usuario_base: Usuario):
         db=db, id_usuario=usuario_base.id_usuario
     )
     assert resultado is None
-
-
-def test_eliminar_usuario_reduce_conteo(db: Session, usuario_base: Usuario):
-    antes = usuario_repository.obtener_usuarios(db=db, skip=0, limit=100)
-    assert len(antes) == 1
-
-    usuario_repository.eliminar_usuario(db=db, usuario=usuario_base)
-
-    despues = usuario_repository.obtener_usuarios(db=db, skip=0, limit=100)
-    assert len(despues) == 0

@@ -39,7 +39,7 @@ def guardar_respuesta_cache(
 ) -> None:
     """Guarda JSON en Redis con TTL por defecto de 120 segundos."""
     try:
-        redis.setex(name=cache_key, time=ttl_segundos, value=valor)
+        redis.set(name=cache_key, value=valor, ex=ttl_segundos)
     except RedisError:
         pass
 

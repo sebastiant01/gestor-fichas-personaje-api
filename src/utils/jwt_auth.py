@@ -79,7 +79,9 @@ def renovar_token(token: str) -> str:
     )
 
 
-def verificar_admin(payload: dict[str, Any] = Depends(verificar_token)) -> dict[str, Any]:
+def verificar_admin(
+    payload: dict[str, Any] = Depends(verificar_token),
+) -> dict[str, Any]:
     """Dependencia que exige ``es_admin`` verdadero en el payload."""
     if not isinstance(payload, dict):
         raise ErrorNoAutorizadoJWT(mensaje="Error interno con el payload.")
