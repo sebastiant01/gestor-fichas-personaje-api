@@ -41,6 +41,7 @@ def engine():
     Base.metadata.create_all(engine)
     yield engine
     Base.metadata.drop_all(engine)
+    engine.dispose()
 
 
 @pytest.fixture(scope="function")
