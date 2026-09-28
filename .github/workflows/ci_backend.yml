@@ -33,7 +33,7 @@ jobs:
                 ACCESS_TOKEN_EXPIRE: 20
                 REFRESH_TOKEN_EXPIRE: 4
               run: |
-                python -m pytest src/tests/ -q
+                python -m pytest src/tests/ -q -n auto
 
             - name: Formateo PEP 8 con Black
               env:
