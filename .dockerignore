@@ -1,0 +1,8 @@
+.venv/
+desktop.ini
+.env
+.git
+.github
+__pycache__
+.pytest_cache
+*.md
