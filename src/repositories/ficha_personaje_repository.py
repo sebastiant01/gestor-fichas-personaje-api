@@ -4,6 +4,8 @@ Capa de acceso a datos para ``FichaPersonaje``.
 Incluye consultas filtradas por usuario, AU, cumpleaños y metadatos del personaje.
 """
 
+from typing import Optional
+
 import uuid
 from datetime import date
 
@@ -22,16 +24,21 @@ def crear_ficha_personaje(db: Session, ficha: FichaPersonaje) -> FichaPersonaje:
 
 
 def obtener_fichas_por_id_usuario(
-    db: Session, id_usuario: uuid.UUID, skip: int, limit: int
+    db: Session,
+    id_usuario: uuid.UUID,
+    skip: int,
+    limit: int,
+    orden_por: Optional[str] = None,
 ) -> list[FichaPersonaje]:
     """Todas las fichas del usuario, paginadas."""
-    return (
-        db.query(FichaPersonaje)
-        .filter(FichaPersonaje.id_usuario == id_usuario)
-        .offset(skip)
-        .limit(limit)
-        .all()
-    )
+    query = db.query(FichaPersonaje).filter(FichaPersonaje.id_usuario == id_usuario)
+
+    if orden_por == "desc":
+        query = query.order_by(FichaPersonaje.fecha_creacion.desc())
+    elif orden_por == "asc":
+        query = query.order_by(FichaPersonaje.fecha_creacion.asc())
+
+    return query.offset(skip).limit(limit).all()
 
 
 def obtener_ficha_por_id(db: Session, id_ficha: uuid.UUID) -> FichaPersonaje | None:

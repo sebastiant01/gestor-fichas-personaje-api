@@ -4,7 +4,7 @@ from datetime import date
 from sqlalchemy.orm import Session
 from fastapi import APIRouter, Depends, status, Query, UploadFile
 from pydantic import BaseModel, Field
-from typing import Any, List, Annotated
+from typing import Any, List, Annotated, Optional
 from uuid import UUID
 
 from src.schemas.ficha_personaje_schema import (
@@ -40,6 +40,7 @@ def obtener_fichas_por_usuario(
     filtros: Annotated[FiltroRequest, Depends()],
     db: Annotated[Session, Depends(get_db)],
     payload: Annotated[dict[str, Any], Depends(verificar_admin)],
+    orden_por: Optional[str] = None,
 ):
     """Lista todas las fichas de personaje del usuario autenticado.
 
@@ -56,6 +57,7 @@ def obtener_fichas_por_usuario(
         id_usuario=get_id_usuario(payload=payload),
         skip=filtros.skip,
         limit=filtros.limit,
+        orden_por=orden_por,
     )
 
 

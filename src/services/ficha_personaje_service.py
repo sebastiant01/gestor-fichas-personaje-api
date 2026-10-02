@@ -4,6 +4,8 @@ Valida AU, permisos, regla de ``edad`` en AUs «idols», imágenes de
 Cloudinary y cache.
 """
 
+from typing import Optional
+
 import uuid
 import json
 from datetime import date
@@ -34,6 +36,7 @@ def _cache_key_fichas_personajes(
     id_au: uuid.UUID | None = None,
     skip: int = 0,
     limit: int = 100,
+    orden_por: Optional[str] = None,
 ):
     """Construye la clave Redis para listados de fichas de personaje.
 
@@ -48,7 +51,9 @@ def _cache_key_fichas_personajes(
         str: Clave Redis en el formato
         ``fichas:usuario:<id_usuario>:<id_au>:<skip>:<limit>``.
     """
-    return f"fichas:usuario:{id_usuario}:{id_au}:{skip}:{limit}"
+    return (
+        f"fichas:usuario:{id_usuario}:{id_au}:{skip}:{limit}:{orden_por or 'sin_orden'}"
+    )
 
 
 def crear_ficha_personaje(
@@ -138,7 +143,11 @@ def crear_ficha_personaje(
 
 
 def obtener_fichas_por_usuario(
-    db: Session, id_usuario: uuid.UUID, skip: int = 0, limit: int = 100
+    db: Session,
+    id_usuario: uuid.UUID,
+    orden_por: Optional[str] = None,
+    skip: int = 0,
+    limit: int = 100,
 ) -> list[FichaPersonaje] | list[dict]:
     """Lista fichas del usuario, sirviendo desde cache cuando es posible.
 
@@ -153,14 +162,14 @@ def obtener_fichas_por_usuario(
         a base de datos, o una lista de diccionarios si vino de cache.
     """
     cache_key = _cache_key_fichas_personajes(
-        id_usuario=id_usuario, skip=skip, limit=limit
+        id_usuario=id_usuario, skip=skip, limit=limit, orden_por=orden_por
     )
     resultado_cache = obtener_respuesta_cache(cache_key=cache_key)
     if resultado_cache:
         return resultado_cache
 
     fichas = ficha_personaje_repository.obtener_fichas_por_id_usuario(
-        db=db, id_usuario=id_usuario, skip=skip, limit=limit
+        db=db, id_usuario=id_usuario, skip=skip, limit=limit, orden_por=orden_por
     )
     fichas_json = json.dumps(
         [
@@ -229,7 +238,10 @@ def obtener_fichas_por_au(
         AppException: Si el AU no pertenece al usuario (403).
     """
     cache_key = _cache_key_fichas_personajes(
-        id_usuario=id_usuario, id_au=id_au, skip=skip, limit=limit
+        id_usuario=id_usuario,
+        id_au=id_au,
+        skip=skip,
+        limit=limit,
     )
     resultado_cache = obtener_respuesta_cache(cache_key=cache_key)
     if resultado_cache:
