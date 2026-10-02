@@ -73,6 +73,7 @@ registrar_error_handlers(app=app)
 
 @app.get(path="/health", status_code=status.HTTP_200_OK)
 def health():
+    """Verifica que la API esté en línea."""
     return {"status": "ok"}
 
 
